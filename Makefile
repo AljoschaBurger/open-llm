@@ -1,9 +1,13 @@
 # .PHONY: up declares that "start" is not a file name but a command/ target
 .PHONY: start
 .PHONY: stop
+.PHONY: test
 
 start:
 	docker compose up -d --build
 
 stop:
 	docker compose down
+
+test:
+	cd backend && go test ./... && cd ..

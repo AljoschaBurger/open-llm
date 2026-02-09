@@ -10,6 +10,12 @@ import (
 	"github.com/AljoschaBurger/open-llm/ollama"
 )
 
+// Ollama and docker information
+var usedModel = "llama3.1:8b-instruct-q4_1"                    // the specific llm model
+var usedContainer = "llm"                                      // the container name from the llm defined in the docker-compose.yaml file
+var usedPort = "11434"                                         // the port where the llm is running
+var OllamaBaseURL = "http://" + usedContainer + ":" + usedPort // default URL
+
 // HandlePrompt processes HTTP POST requests to interact with the Ollama LLM.
 // It reads a prompt from the request body, validates the JSON, and prepares the prompt for further processing.
 // The response is streamed back to the client in a chunked format.
@@ -19,11 +25,6 @@ func HandlePrompt(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	// Ollama and docker information
-	usedModel := "llama3.1:8b-instruct-q4_1" // the specific llm model
-	usedContainer := "llm"                   // the contaiener name from the llm defined in the docker-compose.yaml file
-	usedPort := "11434"                      // the port where the llm is running
 
 	// Parse the JSON-encoded prompt from the request body into the ollama.PromptRequest struct.
 	var req ollama.PromptRequest
@@ -40,14 +41,23 @@ func HandlePrompt(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// transforms the request-struct into json bytes to be handled by io.Reader
-	body, _ := json.Marshal(ollamaRequest)
+	body, err := json.Marshal(ollamaRequest)
+	if err != nil {
+		http.Error(w, "Failed to marshal request", 500)
+		return
+	}
 
 	// builds a http-request out of the json serialized struct
-	ollamaHTTPReq, _ := http.NewRequest(
+	ollamaHTTPReq, err := http.NewRequest(
 		"POST",
-		"http://"+usedContainer+":"+usedPort+"/api/generate",
+		OllamaBaseURL,
 		bytes.NewBuffer(body),
 	)
+
+	if err != nil {
+		http.Error(w, "Failed to create new POST-Request", 500)
+		return
+	}
 
 	ollamaHTTPReq.Header.Set("Content-Type", "application/json")
 
