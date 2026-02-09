@@ -1,4 +1,4 @@
-SUBTASKS = start stop test mysql
+SUBTASKS = start stop test mysql backend
 
 .PHONY: subtasks $(SUBTASKS)
 
@@ -13,3 +13,6 @@ go-test:
 
 mysql:
 	docker exec -it open-llm-mysql-1 mysql -u root -proot123 llm-db;
+
+backend:
+	docker exec -it open-llm-backend-1 /bin/sh

@@ -1,5 +1,5 @@
 // Package handler provides HTTP handlers for processing requests.
-package handler
+package handlers
 
 import (
 	"bufio"

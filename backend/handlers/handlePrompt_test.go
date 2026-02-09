@@ -1,4 +1,4 @@
-package handler_test
+package handlers_test
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AljoschaBurger/open-llm/handler"
+	"github.com/AljoschaBurger/open-llm/handlers"
 )
 
 // Testet POST + Streaming
@@ -21,14 +21,14 @@ func TestHandlePrompt_Streaming(t *testing.T) {
 	defer mock.Close()
 
 	// Überschreibe die BaseURL für den Test
-	oldURL := handler.OllamaBaseURL
-	handler.OllamaBaseURL = mock.URL
-	defer func() { handler.OllamaBaseURL = oldURL }()
+	oldURL := handlers.OllamaBaseURL
+	handlers.OllamaBaseURL = mock.URL
+	defer func() { handlers.OllamaBaseURL = oldURL }()
 
 	req := httptest.NewRequest(http.MethodPost, "/prompt", bytes.NewBufferString(`{"prompt":"Hallo Welt"}`))
 	w := httptest.NewRecorder()
 
-	handler.HandlePrompt(w, req)
+	handlers.HandlePrompt(w, req)
 
 	resp := w.Result()
 	defer resp.Body.Close()
