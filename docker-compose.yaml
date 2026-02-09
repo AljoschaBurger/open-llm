@@ -1,0 +1,51 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: llm-db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user123
+      MYSQL_ROOT_PASSWORD: root123
+    ports:
+      - "3306:3306"
+    volumes:
+        # creates the folder mysql-data in /var/lib/mysql inside of the container
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping","-h", "localhost", "-proot123"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  llm:
+    image: ollama/ollama:latest
+    ports:
+      - "11435:11434"
+    volumes:
+      - llm-data:/root/.ollama
+
+  backend:
+      build:
+        context: ./backend
+      environment:
+      # USER : PASSWORD @ PROTOCOL(HOST:PORT) / DATABASE ? OPTIONS
+        MYSQL_DSN: "user:user123@tcp(mysql:3306)/llm-db?parseTime=true"
+        OLLAMA_BASE_URL: "http://llm:11434"
+        OLLAMA_MODEL: "llama3.1:8b-instruct-q4_1"
+      ports:
+        - "8080:8080"
+      depends_on:
+        mysql:
+          condition: service_healthy
+        llm:
+          condition: service_started
+    
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+volumes:
+  mysql-data:
+  llm-data:
