@@ -21,4 +21,7 @@ A free to use and containerized generative AI web application to use ollama llam
 ```bash
 - make test
 ```
-
+## Use the mysql database through the terminal
+```bash
+- make mysql
+```
