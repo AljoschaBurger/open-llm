@@ -7,5 +7,5 @@ start:
 stop:
 	docker compose down
 
-test:
+go-test:
 	cd backend && go test ./... && cd ..
