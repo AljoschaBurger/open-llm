@@ -18,8 +18,8 @@ func main() {
 	mux := http.NewServeMux()
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"}, // react-vite frontend
-		AllowedMethods:   []string{"POST", "GET"},
+		AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:8080"}, // react-vite frontend + curl
+		AllowedMethods:   []string{"POST", "GET", "DELETE", "PUT", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 	})
@@ -31,7 +31,7 @@ func main() {
 	cfg.User = "root"
 	cfg.Passwd = "root123"
 	cfg.Net = "tcp"
-	cfg.Addr = "127.0.0.1:3306"
+	cfg.Addr = "mysql:3306"
 	cfg.DBName = "llm-db"
 
 	var err error
@@ -51,7 +51,14 @@ func main() {
 	// default prompting handle
 	handlePrompt := handlers.HandlePrompt
 	mux.HandleFunc("/ask", func(w http.ResponseWriter, r *http.Request) {
-		handlePrompt(w, r)
+		log.Printf("Received request with method: %s", r.Method)
+		handlePrompt(db, w, r)
+	})
+
+	// creates instruction file with user input
+	handleCreateInstruction := handlers.HandleCreateInstruction
+	mux.HandleFunc("/create-instruction", func(w http.ResponseWriter, r *http.Request) {
+		handleCreateInstruction(db, w, r)
 	})
 
 	log.Println("Backend running on Port :8080")

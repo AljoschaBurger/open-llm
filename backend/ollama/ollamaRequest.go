@@ -1,9 +1,9 @@
 package ollama
 
 type PromptRequest struct {
-	InstructionFile string `json:"instruction"` // optional
-	CurrentChatId   int    `json:"currentChatId"`
-	Prompt          string `json:"prompt"`
+	Instruction   string `json:"instruction"` // optional
+	CurrentChatId int    `json:"currentChatId"`
+	Prompt        string `json:"prompt"`
 }
 
 type OllamaRequest struct {

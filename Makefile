@@ -1,4 +1,4 @@
-SUBTASKS = start stop test mysql backend
+SUBTASKS = start stop test mysql backend ping restart
 
 .PHONY: subtasks $(SUBTASKS)
 
@@ -16,3 +16,9 @@ mysql:
 
 backend:
 	docker exec -it open-llm-backend-1 /bin/sh
+
+ping:
+	curl http://localhost:8080/ping
+
+restart:
+	make stop && make start

@@ -4,22 +4,30 @@ package handlers
 import (
 	"bufio"
 	"bytes"
+	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/AljoschaBurger/open-llm/ollama"
 )
 
+var OllamaHTTPClient = &http.Client{}
+
 // Ollama and docker information
-var usedModel = "llama3.1:8b-instruct-q4_1"                    // the specific llm model
-var usedContainer = "llm"                                      // the container name from the llm defined in the docker-compose.yaml file
-var usedPort = "11434"                                         // the port where the llm is running
-var OllamaBaseURL = "http://" + usedContainer + ":" + usedPort // default URL
+var usedModel = "llama3.1:8b-instruct-q4_1"                                      // the specific llm model
+var usedContainer = "llm"                                                        // the container name from the llm defined in the docker-compose.yaml file
+var usedPort = "11434"                                                           // the port where the llm is running
+var OllamaBaseURL = "http://" + usedContainer + ":" + usedPort + "/api/generate" // full URL with endpoint
 
 // HandlePrompt processes HTTP POST requests to interact with the Ollama LLM.
 // It reads a prompt from the request body, validates the JSON, and prepares the prompt for further processing.
 // The response is streamed back to the client in a chunked format.
-func HandlePrompt(w http.ResponseWriter, r *http.Request) {
+func HandlePrompt(
+	db *sql.DB,
+	w http.ResponseWriter,
+	r *http.Request) {
+	log.Println("ARGH")
 	// Ensure the request method is POST; reject other methods with a 405 status.
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
@@ -31,6 +39,23 @@ func HandlePrompt(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
+	}
+
+	// if there is an instruction file - put it in the beginning of the prompt
+	if req.Instruction != "" {
+		var instruction string
+		err := db.QueryRow("select instruction from instruction where name = ?", req.Instruction).Scan(&instruction)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				http.Error(w, "Instruction file not found", http.StatusNotFound)
+				return
+			} else {
+				http.Error(w, "Failed to get instruction from database", http.StatusInternalServerError)
+				return
+			}
+		}
+
+		req.Prompt = instruction + req.Prompt
 	}
 
 	// build the request-struct out of the validated prompt
@@ -62,7 +87,7 @@ func HandlePrompt(w http.ResponseWriter, r *http.Request) {
 	ollamaHTTPReq.Header.Set("Content-Type", "application/json")
 
 	// calls the request through the given client and get a response
-	client := &http.Client{}
+	client := OllamaHTTPClient
 	resp, err := client.Do(ollamaHTTPReq)
 	if err != nil {
 		http.Error(w, "Failed to contact Ollama", 500)

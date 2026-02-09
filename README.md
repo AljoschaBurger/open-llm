@@ -26,6 +26,17 @@ A free to use and containerized generative AI web application to use ollama llam
 - make mysql
 ```
 
+## Use the backend through terminal
+```bash
+- make backend
+```
+
+## Test the backend connection
+```bash
+- make ping
+```
+
 ### Todos
 1. Add a handler to add an instruction file which has to be safed in the backend
 2. Add handler to change the current chat which changes the frontend trough a db call (chat history)
+3. Frontend
