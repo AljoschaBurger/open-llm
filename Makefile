@@ -1,7 +1,5 @@
-# .PHONY: up declares that "start" is not a file name but a command/ target
-.PHONY: start
-.PHONY: stop
-.PHONY: test
+SUBTASKS = start stop test
+.PHONY: subtasks $(SUBTASKS)
 
 start:
 	docker compose up -d --build
