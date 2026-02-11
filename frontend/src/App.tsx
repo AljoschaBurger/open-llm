@@ -1,15 +1,43 @@
-function App() {
+import { useState } from "react";
+
+export default function App() {
+  const [output, setOutput] = useState("");
+
+  const sendPrompt = async () => {
+    const response = await fetch("http://localhost:8080/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: "wie definiert man einen struct in golang? antworte kurz"}), // replace with dynamic value
+    });
+
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      const chunkText = decoder.decode(value).trim();
+      if (!chunkText) continue;
+      const lines = chunkText.split("\n");
+      for (const line of lines) {
+        try {
+          const obj = JSON.parse(line);
+          if (obj.response) {
+            setOutput(prev => prev + obj.response);
+          }
+        } catch (err) {
+          console.warn("Invalid JSON chunk:", line);
+        }
+  }
+    }
+  };
+
   return (
-    <div className="bg-gray-800 text-white p-6 rounded-lg shadow-lg max-w-sm mx-auto mt-10">
-      <h1 className="text-2xl font-bold mb-2">Tailwind + CRA funktioniert!</h1>
-      <p className="text-gray-300">
-        Das ist ein Test für Tailwind 3.4.17 in React Create App mit TypeScript.
-      </p>
-      <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        Test Button
-      </button>
+    <div>
+      <button onClick={sendPrompt}>Send Prompt</button>
+      <pre>{output}</pre>
     </div>
   );
 }
 
-export default App;
