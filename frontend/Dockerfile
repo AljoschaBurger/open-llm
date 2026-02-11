@@ -1,7 +1,17 @@
-FROM node:20-alpine
+# Stage 1: Install dependencies
+FROM node:20
+
 WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci || npm i
+
+# Kopiere package.json und package-lock.json und installiere dependencies
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Stage 2: Kopiere Quellcode
 COPY . .
-EXPOSE 5173
-CMD ["npm", "run", "dev", "--", "--host"]
+
+# Ports exposed für CRA Dev Server
+EXPOSE 3000
+
+# Start Command für CRA Dev Server
+CMD ["npm", "start"]

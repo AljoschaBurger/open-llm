@@ -1,4 +1,4 @@
-SUBTASKS = start stop test mysql backend ping restart
+SUBTASKS = start stop test mysql backend ping restart open
 
 .PHONY: subtasks $(SUBTASKS)
 
@@ -22,3 +22,6 @@ ping:
 
 restart:
 	make stop && make start
+
+open:
+	xdg-open http://localhost:5173

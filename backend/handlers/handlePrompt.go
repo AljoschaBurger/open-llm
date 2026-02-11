@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/AljoschaBurger/open-llm/ollama"
@@ -27,7 +26,6 @@ func HandlePrompt(
 	db *sql.DB,
 	w http.ResponseWriter,
 	r *http.Request) {
-	log.Println("ARGH")
 	// Ensure the request method is POST; reject other methods with a 405 status.
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
@@ -41,7 +39,7 @@ func HandlePrompt(
 		return
 	}
 
-	// if there is an instruction file - put it in the beginning of the prompt
+	// if there is an instruction inside of the request - put it in the beginning of the prompt
 	if req.Instruction != "" {
 		var instruction string
 		err := db.QueryRow("select instruction from instruction where name = ?", req.Instruction).Scan(&instruction)
@@ -74,9 +72,9 @@ func HandlePrompt(
 
 	// builds a http-request out of the json serialized struct
 	ollamaHTTPReq, err := http.NewRequest(
-		"POST",
-		OllamaBaseURL,
-		bytes.NewBuffer(body),
+		"POST",                // Method
+		OllamaBaseURL,         // container url from the llm
+		bytes.NewBuffer(body), // the actual json body with the information from the user request as bytes
 	)
 
 	if err != nil {
