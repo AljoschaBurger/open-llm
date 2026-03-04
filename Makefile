@@ -24,4 +24,4 @@ restart:
 	make stop && make start
 
 open:
-	xdg-open http://localhost:5173
+	xdg-open http://localhost:3000

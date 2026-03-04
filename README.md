@@ -41,7 +41,7 @@ A free to use and containerized generative AI web application to use ollama llam
 2. Add handler to change the current chat which changes the frontend trough a db call (chat history)
 3. Frontend
 4. Edit the handlePrompt_test.go that it is able to test db queries
-
+5. Update to new go version
 
 Test curl:
 
