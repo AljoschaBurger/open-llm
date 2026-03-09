@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Kopiere package.json und package-lock.json und installiere dependencies
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 
 # Stage 2: Kopiere Quellcode
 COPY . .

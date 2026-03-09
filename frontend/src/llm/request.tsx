@@ -6,7 +6,8 @@ interface RequestProps {
   placeholder?: string;
   maxHeightPx?: number;
   minRows?: number;
-  className?: string; 
+  className?: string;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 }
 
 export default function PromptRequest ({ 
@@ -16,8 +17,8 @@ export default function PromptRequest ({
     maxHeightPx = 180,
     minRows = 1,
     className = '',
+    onKeyDown,
 }: RequestProps) {
-    const [prompt, setPrompt] = useState(value);
     const ref = useRef<HTMLTextAreaElement | null>(null);
     const [isScrollable, setIsScrollable] = useState(false);
 
@@ -52,6 +53,7 @@ export default function PromptRequest ({
                 onChange={(e) => onChange(e.target.value)}
                 onInput={resize}
                 placeholder={placeholder}
+                onKeyDown={onKeyDown} // Pass onKeyDown to the textarea
             />
     )
 }

@@ -1,19 +1,71 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import PromptRequest from "./request";
+import localforage from "localforage";
+import Header from "./Header";
 
 export default function Chat() {
-    const [output, setOutput] = useState("");
-    const [input, setInput] = useState("");
-    
-      const sendPrompt = async () => {
-        addNewPrompt();
-        const t = text;
-        setText("");
+    type Prompt = {
+      id: number,
+      type: "prompt",
+      content: string,
+    }
+
+    type Response = {
+      id: number,
+      type: "response",
+      content: string,
+    }
+
+    type ChatEntry = Prompt | Response;
+
+    const [history, setHistory] = useState<ChatEntry[]>([]);
+    const [prompt, setPrompt] = useState("");
+    const [isAtBottom, setIsAtBottom] = useState(true); // New state for scroll position
+
+    const getNextId = (): number => {
+      return history.length > 0 
+        ? Math.max(...history.map(p => p.id)) + 1
+        : 1;
+    }
+
+    const addPromptToHistory = (currentPrompt: string): number => {
+      const newId: number = getNextId();
+      const newPrompt: Prompt = {
+        id: newId,
+        type: "prompt",
+        content: currentPrompt,
+      };      
+
+      setHistory((prevHistory) => {
+        return [...prevHistory, newPrompt];
+      });
+      return newId;
+    };
+
+    const addResponseToHistory = (): number => {
+      const newId: number = getNextId();
+      const newResponse: Response = {
+        id: newId,
+        type: "response",
+        content: "",
+      };
+
+      setHistory((prevHistory) => [...prevHistory, newResponse]);
+      return newId;
+    }
+
+    const sendPrompt = async () => {
+        const currentPrompt = prompt;
+        setIsAtBottom(true); // Force scroll to bottom when user sends a message
+        addPromptToHistory(currentPrompt);
+        setPrompt("");
+
+        const responseId = addResponseToHistory();
 
         const response = await fetch("http://localhost:8080/ask", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: text }),
+          body: JSON.stringify({ prompt: currentPrompt }),
         });
     
         const reader = response.body!.getReader();
@@ -21,16 +73,29 @@ export default function Chat() {
     
         while (true) {
           const { value, done } = await reader.read();
-          if (done) break;
+
+          if (done) {
+            break
+          };
     
           const chunkText = decoder.decode(value).trim();
-          if (!chunkText) continue;
+
+          if (!chunkText) {
+            continue
+          };
+
           const lines = chunkText.split("\n");
           for (const line of lines) {
             try {
               const obj = JSON.parse(line);
               if (obj.response) {
-                setOutput(prev => prev + obj.response);
+                setHistory(prevHistory => {
+                  return prevHistory.map(entry => 
+                    entry.id === responseId && entry.type === "response"
+                      ? { ...entry, content: entry.content + obj.response }
+                      : entry
+                  );
+                });
               }
             } catch (err) {
               console.warn("Invalid JSON chunk:", line);
@@ -39,60 +104,112 @@ export default function Chat() {
     }
     };
 
-    const [text, setText] = useState("");
-
-    const addNewPrompt = () => {
-      const newId: number = prompts.length > 0 
-        ? Math.max(...prompts.map(p => p.id)) + 1
-        : 1;
-
-      let content = text;
-
-      const newPrompt: Prompt = {
-        id: newId,
-        content: content,
-      };      
-
-      setPrompts((prevPrompts) => {
-        return [...prevPrompts, newPrompt];
-      });
-    };
-
-    type Prompt = {
-      id: number,
-      content: string
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (event.key === 'Enter') {
+        if (prompt.trim() !== '') {
+          event.preventDefault();
+          sendPrompt();
+        }
+      }
     }
 
-    const [prompts, setPrompts] = useState<Prompt[]>([]);
+    const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+    const scrollToBottom = () => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
+      }
+    };
+
+    const handleScroll = () => { // New handleScroll function
+      if (messagesEndRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = messagesEndRef.current;
+        // Check if user is at the very bottom, with a small tolerance
+        const atBottom = scrollTop + clientHeight >= scrollHeight - 10; // 10px tolerance
+        setIsAtBottom(atBottom);
+      }
+    };
+
+    useEffect(() => {
+      if (isAtBottom) { // Only auto-scroll if currently at the bottom
+        scrollToBottom();
+      }
+    }, [history, isAtBottom]);
+
+    useEffect(() => {
+      if (history.length > 0) {
+        localforage.setItem('chat_history', history).catch(err => 
+          console.error("Fehler beim automatischen Speichern:", err)
+        );
+      }
+    }, [history]);
+
+    // 2. Einmaliges Laden beim Start der App
+    useEffect(() => {
+      const loadInitialData = async () => {
+        try {
+          const savedHistory = await localforage.getItem<ChatEntry[]>('chat_history');
+          if (savedHistory) {
+            setHistory(savedHistory);
+          }
+        } catch (err) {
+          console.error("Fehler beim Laden aus localForage:", err);
+        }
+      };
+      loadInitialData();
+    }, []);
+
+    async function clearLocalForage() {
+      try {
+        await localforage.clear();
+        window.location.reload();
+      } catch (err) {
+        console.error("Error while trying to clear localforage", err);
+      }
+    }
 
     return (
-        <div className="flex items-center justify-between h-screen flex-col w-full bg-green-500">    
-            <div>
-              <div className="w-96 h-32 border border-gray-300 rounded-md p-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500">
-                {output}  
-              </div> 
-            </div>
-
-            <div>
+        <div className="flex items-center justify-between h-screen flex-col w-full bg-gray-800 gap-y-4">   
+            <Header /> 
+            {
+              history.length !== 0 ? (
+                <div ref={messagesEndRef} onScroll={handleScroll} className="flex mt-5 flex-col flex-1 overflow-y-auto w-[70%] p-4 space-y-4 bg-gray-700 rounded-lg">
               {
-                prompts.map(prompt => (
+                history.map(item => (
                   <div
-                    key={prompt.id}
+                    key={item.id}
+                    className={`p-3 rounded-lg w-[60%] ${item.type === "prompt" ? "bg-blue-500 text-white self-end" : "bg-gray-300 text-gray-800 self-start"}`}
                   >
-                    {prompt.content}
+                    <div className="font-bold text-sm mb-1">
+                        {item.type === "prompt" ? "You" : "Open-llm"}
+                    </div>
+                    {
+                      item.content !== "" ? (
+                        <div>{item.content}</div>
+                      ) : (
+                        <div>Loading...</div>
+                      )
+                    }
                   </div>
                 ))
+              
               }
             </div>
+              ) : (
+                <div className="flex justify-center bg-gray-300 p-4 text-xl rounded-lg shadow-fuchsia-600 shadow-lg">Try your local Open-llm instace with a prompt!</div>
+              )
+            }
             
-            <div className="flex flex-col mb-10 items-center justify-center w-[80%]">
+            <div className="flex flex-row mb-10 items-center justify-center w-[40%]">
               <PromptRequest  
-                value={text}
-                onChange={setText}
+                value={prompt}
+                onChange={setPrompt}
                 maxHeightPx={200}
                 minRows={1}
+                onKeyDown={handleKeyDown}
               />
-              <div className="flex w-[80%] justify-end mr-3"><button onClick={sendPrompt} className="border border-md border-black rounded-lg p-1 mt-2 bg-white">Send</button></div>
+              <div className="flex ml-2 justify-end mr-3"><button onClick={sendPrompt} className="border border-md border-black rounded-lg p-1 mt-2 bg-white">Send</button></div>
+              <div className="flex ml-2 justify-end mr-3"><button onClick={clearLocalForage} className="border border-md border-black rounded-lg p-1 mt-2 bg-white">Clear</button></div>
             </div>
         </div>
     )
