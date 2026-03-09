@@ -2,6 +2,9 @@ import { useEffect, useState, useRef } from "react";
 import PromptRequest from "./request";
 import localforage from "localforage";
 import Header from "./Header";
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 export default function Chat() {
     type Prompt = {
@@ -178,14 +181,34 @@ export default function Chat() {
                 history.map(item => (
                   <div
                     key={item.id}
-                    className={`p-3 rounded-lg w-[60%] ${item.type === "prompt" ? "bg-blue-500 text-white self-end" : "bg-gray-300 text-gray-800 self-start"}`}
+                    className={`p-3 rounded-lg w-[80%] ${item.type === "prompt" ? "bg-blue-500 text-white self-end" : "bg-gray-200 text-gray-800 self-start"}`}
                   >
                     <div className="font-bold text-sm mb-1">
                         {item.type === "prompt" ? "You" : "Open-llm"}
                     </div>
                     {
                       item.content !== "" ? (
-                        <div>{item.content}</div>
+                        <ReactMarkdown
+                          children={item.content}
+                          components={{
+                            code({ node, inline, className, children, ...props }: any) {
+                              const match = /language-(\w+)/.exec(className || '');
+                              return !inline && match ? (
+                                <SyntaxHighlighter
+                                  children={String(children).replace(/\n$/, '')}
+                                  style={atomDark} // Hier das Theme zuweisen
+                                  language={match[1]}
+                                  PreTag="div"
+                                  {...props}
+                                />
+                              ) : (
+                                <code className={className} {...props}>
+                                  {children}
+                                </code>
+                              );
+                            }
+                          }}
+                        />
                       ) : (
                         <div>Loading...</div>
                       )
