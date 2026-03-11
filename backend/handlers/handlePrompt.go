@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/AljoschaBurger/open-llm/ollama"
@@ -18,6 +19,16 @@ var usedModel = "llama3.1:8b-instruct-q4_1"                                     
 var usedContainer = "llm"                                                        // the container name from the llm defined in the docker-compose.yaml file
 var usedPort = "11434"                                                           // the port where the llm is running
 var OllamaBaseURL = "http://" + usedContainer + ":" + usedPort + "/api/generate" // full URL with endpoint
+
+func checkForTable(db *sql.DB, dbName string, tableName string) (bool, error) {
+	query := `select count(*) from information_schema.TABLES where TABLE_SCHEMA = ? AND TABLE_NAME = ?`
+	var count int
+	err := db.QueryRow(query, dbName, tableName).Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("Error while trying to check if %s table exists: %w", tableName, err)
+	}
+	return count > 0, nil
+}
 
 // HandlePrompt processes HTTP POST requests to interact with the Ollama LLM.
 // It reads a prompt from the request body, validates the JSON, and prepares the prompt for further processing.
@@ -41,8 +52,12 @@ func HandlePrompt(
 
 	// if there is an instruction inside of the request - put it in the beginning of the prompt
 	if req.Instruction != "" {
+		doesInstructionExist, err := checkForTable(db, "llm-db", "instruction")
+		if !doesInstructionExist {
+			db.Exec("create table if not exists instruction (name varchar(255) not null primary key, instruction TEXT not null)")
+		}
 		var instruction string
-		err := db.QueryRow("select instruction from instruction where name = ?", req.Instruction).Scan(&instruction)
+		err = db.QueryRow("select instruction from instruction where name = ?", req.Instruction).Scan(&instruction)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				http.Error(w, "Instruction file not found", http.StatusNotFound)

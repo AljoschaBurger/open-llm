@@ -18,7 +18,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:8080", "http://open-llm.lokal:3000"}, // react-vite frontend + curl
+		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:8080", "http://open-llm.lokal:3000"},
 		AllowedMethods:   []string{"POST", "GET", "DELETE", "PUT", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
