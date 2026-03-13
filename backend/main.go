@@ -61,6 +61,12 @@ func main() {
 		handleCreateInstruction(db, w, r)
 	})
 
+	// get all instructions for the instruction list
+	handleGetAllInstructions := handlers.HandleGetAllInstructionFiles
+	mux.HandleFunc("/instructions/all", func(w http.ResponseWriter, r *http.Request) {
+		handleGetAllInstructions(db, w, r)
+	})
+
 	log.Println("Backend running on Port :8080")
 	log.Fatal(http.ListenAndServe("0.0.0.0:8080", handler))
 }

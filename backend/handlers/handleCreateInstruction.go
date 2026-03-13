@@ -9,7 +9,7 @@ import (
 	db_presets "github.com/AljoschaBurger/open-llm/db"
 )
 
-type instruction struct {
+type Instruction struct {
 	Name        string
 	Instruction string
 }
@@ -25,7 +25,7 @@ func HandleCreateInstruction(
 		return
 	}
 
-	var req instruction
+	var req Instruction
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid Request", http.StatusBadRequest)
 		return
@@ -45,6 +45,19 @@ func HandleCreateInstruction(
 	_, err := db.Exec(db_presets.CreateInstruction)
 	if err != nil {
 		http.Error(w, "Can not create table instruction", http.StatusBadRequest)
+		return
+	}
+
+	var counter int
+
+	err = db.QueryRow("select count(*) from instruction").Scan(&counter)
+	if err != nil {
+		log.Fatalf("Error while trying to count instruction entries: %v", err)
+	}
+
+	if counter >= 6 {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"message": "700"}`)) //shows that there are allready too much entries for instructions (max. 6)
 		return
 	}
 
@@ -69,5 +82,5 @@ func HandleCreateInstruction(
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(`{"message: "Instruction created successfully}`))
+	w.Write([]byte(`{"message": "Instruction created successfully"}`))
 }

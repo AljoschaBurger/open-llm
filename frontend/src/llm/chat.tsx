@@ -5,6 +5,7 @@ import Header from "./Header";
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import InstructionFileList from "./InstructionFileList";
 
 export default function Chat() {
     type Prompt = {
@@ -142,12 +143,11 @@ export default function Chat() {
     useEffect(() => {
       if (history.length > 0) {
         localforage.setItem('chat_history', history).catch(err => 
-          console.error("Fehler beim automatischen Speichern:", err)
+          console.error("Error while auto saving:", err)
         );
       }
     }, [history]);
 
-    // 2. Einmaliges Laden beim Start der App
     useEffect(() => {
       const loadInitialData = async () => {
         try {
@@ -156,7 +156,7 @@ export default function Chat() {
             setHistory(savedHistory);
           }
         } catch (err) {
-          console.error("Fehler beim Laden aus localForage:", err);
+          console.error("Error while loading data from localForage:", err);
         }
       };
       loadInitialData();
@@ -171,19 +171,22 @@ export default function Chat() {
       }
     }
 
+    const [showInstructions, setShowInstructions] = useState(false);
+
     return (
-        <div className="flex items-center justify-between h-screen flex-col w-full bg-gray-800 gap-y-4">   
+        <div className="flex flex-row w-full bg-gray-800 justify-center relative"> {/* Added relative */}
+          <div className="flex ml-20 items-center justify-between h-screen flex-col w-[90%]"> {/* This is the chat column */}
             <Header /> 
             {
               history.length !== 0 ? (
-                <div ref={messagesEndRef} onScroll={handleScroll} className="flex mt-5 flex-col flex-1 overflow-y-auto w-[70%] p-4 space-y-4 bg-gray-700 rounded-lg">
+                <div ref={messagesEndRef} onScroll={handleScroll} className="flex mt-5 flex-col flex-1 overflow-y-auto w-[70%] p-4 space-y-4 bg-gray-600 rounded-lg">
               {
                 history.map(item => (
                   <div
                     key={item.id}
                     className={`p-3 rounded-lg w-[80%] ${item.type === "prompt" ? "bg-blue-500 text-white self-end" : "bg-gray-200 text-gray-800 self-start"}`}
                   >
-                    <div className="font-bold text-sm mb-1">
+                    <div className="font-extrabold text-sm mb-1">
                         {item.type === "prompt" ? "You" : "Open-llm"}
                     </div>
                     {
@@ -196,7 +199,7 @@ export default function Chat() {
                               return !inline && match ? (
                                 <SyntaxHighlighter
                                   children={String(children).replace(/\n$/, '')}
-                                  style={atomDark} // Hier das Theme zuweisen
+                                  style={atomDark} // Theme
                                   language={match[1]}
                                   PreTag="div"
                                   {...props}
@@ -219,11 +222,10 @@ export default function Chat() {
               }
             </div>
               ) : (
-                <div className="flex justify-center bg-gray-300 p-4 text-xl rounded-lg shadow-fuchsia-600 shadow-lg">Try your local Open-llm instace with a prompt!</div>
+                <div className="flex justify-center bg-gray-300 p-4 text-xl rounded-lg shadow-fuchsia-600 shadow-lg border-2 border-white">Try your local Open-llm instace with a prompt!</div>
               )
-            }
-            
-            <div className="flex flex-row mb-10 items-center justify-center w-[40%]">
+            }            
+            <div className="flex flex-row mt-10 mb-10 items-center justify-center w-[40%]">
               <PromptRequest  
                 value={prompt}
                 onChange={setPrompt}
@@ -234,6 +236,16 @@ export default function Chat() {
               <div className="flex ml-2 justify-end mr-3"><button onClick={sendPrompt} className="border border-md border-black rounded-lg p-1 mt-2 bg-white">Send</button></div>
               <div className="flex ml-2 justify-end mr-3"><button onClick={clearLocalForage} className="border border-md border-black rounded-lg p-1 mt-2 bg-white">Clear</button></div>
             </div>
+        </div>
+        <div className="absolute right-10 top-4 bottom-0 flex flex-col items-center w-[12%]"> {/* Absolute positioning, adjusted for internal flex */}
+           {
+            showInstructions  ? (
+              <InstructionFileList onClose={() => {setShowInstructions(false)}}/>
+            ) : (
+              <button className="flex flex-col gap-y-2 items-center justify-center w-[80%] h-[5%] bg-gray-600 mt-16 p-3 rounded-md hover:scale-110 transition-transform duration-200 text-white" onClick={() => {setShowInstructions(true)}}>Instruction Files</button>
+            )
+           }
+        </div>
         </div>
     )
 }
