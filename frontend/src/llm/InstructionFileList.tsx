@@ -37,15 +37,15 @@ export default function InstructionFileList({ onClose }: InstructionFileListProp
 
     const [activeInstruction, setActiveInstruction] = useState(localStorage.getItem("activeInstruction") ?? "");
 
-    const handleClick = (index: number) => {
-        if (activeInstruction === String(index)) {
+    const handleClick = (index: number, name: string) => {
+        if ((activeInstruction === name)) {
             setActiveInstruction("");
             localStorage.setItem("activeInstruction", "");
             return;
         } 
 
-        localStorage.setItem("activeInstruction", String(index));
-        setActiveInstruction(String(index));
+        localStorage.setItem("activeInstruction", name);
+        setActiveInstruction(name);
     }
 
     const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -69,10 +69,10 @@ export default function InstructionFileList({ onClose }: InstructionFileListProp
                     {
                         instructionFiles.length !== 0 ? (
                             instructionFiles.map((file, index) => (
-                                activeInstruction == String(index) ? (
-                                    <button onClick={() => handleClick(index)} key={index} className="flex items-center justify-center text-sm h-10 p-3 w-[90%] bg-white border-purple-400 shadow-md shadow-purple-600 border rounded-full scale-110 transition-transform duration-200 overflow-hidden flex-shrink-0">{file.name}</button>
+                                activeInstruction == file.name ? (
+                                    <button onClick={() => handleClick(index, file.name)} key={index} className="flex items-center justify-center text-sm h-10 p-3 w-[90%] bg-white border-purple-400 shadow-md shadow-purple-600 border rounded-full scale-110 transition-transform duration-200 overflow-hidden flex-shrink-0">{file.name}</button>
                                     ) : (
-                                    <button onClick={() => handleClick(index)} key={index} className="flex items-center justify-center text-sm h-10 border p-3 w-[90%] border-transparent bg-white rounded-full hover:scale-105 transition-transform duration-200 overflow-hidden flex-shrink-0">{file.name}</button>
+                                    <button onClick={() => handleClick(index, file.name)} key={index} className="flex items-center justify-center text-sm h-10 border p-3 w-[90%] border-transparent bg-white rounded-full hover:scale-105 transition-transform duration-200 overflow-hidden flex-shrink-0">{file.name}</button>
                                 )
                             )
                         )
@@ -82,9 +82,9 @@ export default function InstructionFileList({ onClose }: InstructionFileListProp
                     }
                 </div>
                 <div className="flex justify-center gap-x-2">
-                    <button onClick={() => setIsAddModalOpen(true)} className="text-white font-bold w-[30%] border p-2 bg-green-400 shadow-lg border-green-700 shadow-gray-700 rounded-full hover:scale-105 transition-transform duration-200 overflow-auto">Add</button>
-                    <button disabled={instructionFiles.length === 0} className={`text-white font-bold w-[30%] border p-2 bg-red-400 shadow-lg border-red-700 disabled:bg-gray-500 disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50  shadow-gray-700 rounded-full hover:scale-105 transition-transform duration-200 overflow-auto`}>Del</button>
-                    <button disabled={instructionFiles.length === 0} className="text-white font-bold w-[30%] border p-2 bg-orange-400 shadow-lg border-orange-700 shadow-gray-700 disabled:bg-gray-500 disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 rounded-full hover:scale-105 transition-transform duration-200 overflow-auto">Edit</button>
+                    <button onClick={() => setIsAddModalOpen(true)} className="text-white font-bold w-[30%] border p-2 bg-purple-500 shadow-lg border-none shadow-gray-700 rounded-full hover:scale-105 transition-transform duration-200 overflow-auto">Add</button>
+                    <button disabled={instructionFiles.length === 0} className={`text-white font-bold w-[30%] border p-2 bg-purple-500 shadow-lg border-none disabled:bg-gray-500 disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50  shadow-gray-700 rounded-full hover:scale-105 transition-transform duration-200 overflow-auto`}>Del</button>
+                    <button disabled={instructionFiles.length === 0} className="text-white font-bold w-[30%] border p-2 bg-purple-500 shadow-lg border-none shadow-gray-700 disabled:bg-gray-500 disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 rounded-full hover:scale-105 transition-transform duration-200 overflow-auto">Edit</button>
             
                 </div>
                 </div>

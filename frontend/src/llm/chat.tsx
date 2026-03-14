@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import PromptRequest from "./request";
 import localforage from "localforage";
 import Header from "./Header";
@@ -24,7 +24,7 @@ export default function Chat() {
 
     const [history, setHistory] = useState<ChatEntry[]>([]);
     const [prompt, setPrompt] = useState("");
-    const [isAtBottom, setIsAtBottom] = useState(true); // New state for scroll position
+    const [isAtBottom, setIsAtBottom] = useState(true);
 
     const getNextId = (): number => {
       return history.length > 0 
@@ -59,17 +59,35 @@ export default function Chat() {
     }
 
     const sendPrompt = async () => {
+        updateLocalStorageLength();
         const currentPrompt = prompt;
         setIsAtBottom(true); // Force scroll to bottom when user sends a message
         addPromptToHistory(currentPrompt);
         setPrompt("");
 
+        interface ChatRequest {
+          prompt: string;
+          instruction?: string;
+        }
+
         const responseId = addResponseToHistory();
+
+        const payload: ChatRequest = { 
+          prompt: currentPrompt
+        };
+
+        const instruction = localStorage.getItem("activeInstruction");
+
+        if (instruction && instruction.trim() !== "") {
+            payload.instruction = instruction;
+        }
+
+        console.log(localStorage.getItem("activeInstruction"));
 
         const response = await fetch("http://localhost:8080/ask", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: currentPrompt }),
+          body: JSON.stringify(payload),
         });
     
         const reader = response.body!.getReader();
@@ -164,11 +182,23 @@ export default function Chat() {
     async function clearLocalForage() {
       try {
         await localforage.clear();
+        updateLocalStorageLength();
         window.location.reload();
       } catch (err) {
         console.error("Error while trying to clear localforage", err);
       }
     }
+
+    const [localStorageSize, setLocalStorageSize] = useState<number>(0);
+
+    async function updateLocalStorageLength() {
+        const length = await localforage.length();
+        setLocalStorageSize(length);
+    }
+
+    useEffect(() => {
+      updateLocalStorageLength();
+    }, [history]);
 
     const [showInstructions, setShowInstructions] = useState(false);
 
@@ -225,7 +255,7 @@ export default function Chat() {
                 <div className="flex justify-center bg-gray-300 p-4 text-xl rounded-lg shadow-fuchsia-600 shadow-lg border-2 border-purple-200">Try your local Open-llm instace with a prompt!</div>
               )
             }            
-            <div className="flex flex-row mt-10 mb-10 items-center justify-center w-[40%]">
+            <div className="flex flex-row mt-10 mb-10 items-center justify-center w-[40%] gap-x-2">
               <PromptRequest  
                 value={prompt}
                 onChange={setPrompt}
@@ -233,8 +263,8 @@ export default function Chat() {
                 minRows={1}
                 onKeyDown={handleKeyDown}
               />
-              <div className="flex ml-2 justify-end mr-3"><button onClick={sendPrompt} className="border border-md border-black rounded-lg p-1 mt-2 bg-white">Send</button></div>
-              <div className="flex ml-2 justify-end mr-3"><button onClick={clearLocalForage} className="border border-md border-black rounded-lg p-1 mt-2 bg-white">Clear</button></div>
+              <div className="flex ml-2 justify-end mb-1"><button onClick={sendPrompt} disabled={prompt.length === 0} className="disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 border h-10 text-white font-bold bg-purple-500 shadow-md shadow-purple-800 border-purple-400 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Send</button></div>
+              <div className="flex ml-2 justify-end mb-1"><button onClick={clearLocalForage} disabled={Number(localStorageSize) === 0} className="disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 border h-10 text-white font-bold bg-purple-500 shadow-md shadow-purple-800 border-purple-400 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Clear</button></div>
             </div>
         </div>
         <div className="absolute mt-16 right-10 top-4 bottom-0 flex flex-col items-center w-[12%] border h-[80%] border-gray-600 shadow-sm shadow-purple-800 rounded-lg">
