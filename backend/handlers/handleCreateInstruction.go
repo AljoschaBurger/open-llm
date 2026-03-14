@@ -55,6 +55,7 @@ func HandleCreateInstruction(
 		log.Fatalf("Error while trying to count instruction entries: %v", err)
 	}
 
+	// max. count for instructions
 	if counter >= 6 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"message": "700"}`)) //shows that there are allready too much entries for instructions (max. 6)

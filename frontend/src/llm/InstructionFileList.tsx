@@ -1,5 +1,6 @@
 import { json } from "node:stream/consumers";
 import { useEffect, useState } from "react";
+import ModalAdd from "./modals/ModalAdd";
 
 interface instructionFile {
     name: string,
@@ -16,7 +17,6 @@ export default function InstructionFileList({ onClose }: InstructionFileListProp
     const [trigger, setTrigger] = useState(false);
 
     useEffect(() => {
-        // call to get the instruction files from the database
         async function getData() {
             const url = "http://localhost:8080/instructions/all";
 
@@ -48,48 +48,31 @@ export default function InstructionFileList({ onClose }: InstructionFileListProp
         setActiveInstruction(String(index));
     }
 
-    async function handleCreateInstruction() {
-        let name = "blah";
-        let instruction = "üOIASJDÜOFJ";
-
-        const url = "http://localhost:8080/create-instruction"
-        try {
-            const response = await fetch(url, {
-                method: "POST",
-                body: JSON.stringify({
-                    name: name,
-                    instruction: instruction
-                })
-            })
-
-            const data = await response.json();
-
-            if (data.message === "700") {
-                console.log("Zu viele Einträge");
-                return;
-            }
-            setTrigger(trigger === true ? false : true);
-        } catch (error) {
-            console.error("Error while trying to create new instruction");
-        }
+    const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
+    const handleCloseModalAdd = () => {
+      setIsAddModalOpen(false);
     }
 
     return (
-        <div className="h-full w-[80%]">
-            <button 
-                onClick={onClose} 
-                className="flex justify-center items-center text-2xl rounded-xl text-red-400 absolute top-10 right-2 hover:scale-150 transition-transform duration-100"
-            >x</button>
-            <div className="flex mt-16 flex-col gap-y-5 bg-gray-600 p-3 rounded-md relative">
+        <div className="h-[40%] w-[80%]">
+            <ModalAdd isOpen={isAddModalOpen} onClose={handleCloseModalAdd} title="Add a new Instruction" setTrigger={setTrigger} trigger={trigger} />
+            
+            <div className="flex mt-16 flex-col gap-y-4 max-h-[calc(100%-4rem)] bg-gray-600 p-3 rounded-md relative">
+                <button 
+                    onClick={onClose} 
+                    className="flex justify-center items-center text-2xl rounded-xl text-red-400 absolute top-0 right-2 hover:scale-150 transition-transform duration-100"
+                >
+                    x
+                </button>
                 
-                <div className="flex gap-y-2 p-4 flex-col items-center h-max-64 overflow-y-auto">
+                <div className="flex gap-y-2 p-4 flex-col items-center overflow-y-scroll max-h-[calc(100%-80px)]">
                     {
                         instructionFiles.length !== 0 ? (
                             instructionFiles.map((file, index) => (
                                 activeInstruction == String(index) ? (
-                                    <button onClick={() => handleClick(index)} key={index} className="text-sm p-3 w-[90%] bg-white border-sky-600 border-4 rounded-md scale-110 transition-transform duration-200 overflow-hidden">{file.name}</button>
-                                ) : (
-                                    <button onClick={() => handleClick(index)} key={index} className="text-sm border p-3 w-[90%] border-transparent bg-white rounded-md hover:scale-105 transition-transform duration-200 overflow-hidden">{file.name}</button>
+                                    <button onClick={() => handleClick(index)} key={index} className="flex items-center justify-center text-sm h-10 p-3 w-[90%] bg-white border-purple-400 shadow-md shadow-purple-600 border rounded-full scale-110 transition-transform duration-200 overflow-hidden flex-shrink-0">{file.name}</button>
+                                    ) : (
+                                    <button onClick={() => handleClick(index)} key={index} className="flex items-center justify-center text-sm h-10 border p-3 w-[90%] border-transparent bg-white rounded-full hover:scale-105 transition-transform duration-200 overflow-hidden flex-shrink-0">{file.name}</button>
                                 )
                             )
                         )
@@ -99,9 +82,9 @@ export default function InstructionFileList({ onClose }: InstructionFileListProp
                     }
                 </div>
                 <div className="flex justify-center gap-x-2">
-                    <button onClick={() => handleCreateInstruction()} className="w-[30%] border p-2 bg-green-400 shadow-lg border-green-700 shadow-gray-700 rounded-md hover:scale-105 transition-transform duration-200 overflow-auto">Add</button>
-                    <button onClick={() => handleCreateInstruction()} className="w-[30%] border p-2 bg-red-400 shadow-lg border-red-700 shadow-gray-700 rounded-md hover:scale-105 transition-transform duration-200 overflow-auto">Del</button>
-                    <button onClick={() => handleCreateInstruction()} className="w-[30%] border p-2 bg-orange-400 shadow-lg border-orange-700 shadow-gray-700 rounded-md hover:scale-105 transition-transform duration-200 overflow-auto">Edit</button>
+                    <button onClick={() => setIsAddModalOpen(true)} className="text-white font-bold w-[30%] border p-2 bg-green-400 shadow-lg border-green-700 shadow-gray-700 rounded-full hover:scale-105 transition-transform duration-200 overflow-auto">Add</button>
+                    <button disabled={instructionFiles.length === 0} className={`text-white font-bold w-[30%] border p-2 bg-red-400 shadow-lg border-red-700 disabled:bg-gray-500 disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50  shadow-gray-700 rounded-full hover:scale-105 transition-transform duration-200 overflow-auto`}>Del</button>
+                    <button disabled={instructionFiles.length === 0} className="text-white font-bold w-[30%] border p-2 bg-orange-400 shadow-lg border-orange-700 shadow-gray-700 disabled:bg-gray-500 disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 rounded-full hover:scale-105 transition-transform duration-200 overflow-auto">Edit</button>
             
                 </div>
                 </div>

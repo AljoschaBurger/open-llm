@@ -125,10 +125,9 @@ export default function Chat() {
       }
     };
 
-    const handleScroll = () => { // New handleScroll function
+    const handleScroll = () => { 
       if (messagesEndRef.current) {
         const { scrollTop, scrollHeight, clientHeight } = messagesEndRef.current;
-        // Check if user is at the very bottom, with a small tolerance
         const atBottom = scrollTop + clientHeight >= scrollHeight - 10; // 10px tolerance
         setIsAtBottom(atBottom);
       }
@@ -174,8 +173,9 @@ export default function Chat() {
     const [showInstructions, setShowInstructions] = useState(false);
 
     return (
-        <div className="flex flex-row w-full bg-gray-800 justify-center relative"> {/* Added relative */}
-          <div className="flex ml-20 items-center justify-between h-screen flex-col w-[90%]"> {/* This is the chat column */}
+        <div className="flex flex-row w-full bg-gray-800 justify-center relative">
+          
+          <div className="flex ml-20 items-center justify-between h-screen flex-col w-[90%]">
             <Header /> 
             {
               history.length !== 0 ? (
@@ -222,7 +222,7 @@ export default function Chat() {
               }
             </div>
               ) : (
-                <div className="flex justify-center bg-gray-300 p-4 text-xl rounded-lg shadow-fuchsia-600 shadow-lg border-2 border-white">Try your local Open-llm instace with a prompt!</div>
+                <div className="flex justify-center bg-gray-300 p-4 text-xl rounded-lg shadow-fuchsia-600 shadow-lg border-2 border-purple-200">Try your local Open-llm instace with a prompt!</div>
               )
             }            
             <div className="flex flex-row mt-10 mb-10 items-center justify-center w-[40%]">
@@ -237,7 +237,7 @@ export default function Chat() {
               <div className="flex ml-2 justify-end mr-3"><button onClick={clearLocalForage} className="border border-md border-black rounded-lg p-1 mt-2 bg-white">Clear</button></div>
             </div>
         </div>
-        <div className="absolute right-10 top-4 bottom-0 flex flex-col items-center w-[12%]"> {/* Absolute positioning, adjusted for internal flex */}
+        <div className="absolute mt-16 right-10 top-4 bottom-0 flex flex-col items-center w-[12%] border h-[80%] border-gray-600 shadow-sm shadow-purple-800 rounded-lg">
            {
             showInstructions  ? (
               <InstructionFileList onClose={() => {setShowInstructions(false)}}/>
