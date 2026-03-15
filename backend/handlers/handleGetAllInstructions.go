@@ -12,57 +12,33 @@ type instruction struct {
 	Instruction string `json:"instruction"`
 }
 
-func HandleGetAllInstructionFiles(
-	db *sql.DB,
-	w http.ResponseWriter,
-	r *http.Request,
-) {
+func HandleGetAllInstructionFiles(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var counter int
+	instructions := []instruction{}
 
-	err := db.QueryRow("select count(*) from instruction").Scan(&counter)
+	rows, err := db.Query("select name, instruction from instruction")
 	if err != nil {
-		http.Error(w, "Database Error:", http.StatusBadRequest)
+		log.Printf("DB Query Error: %v", err)
+		http.Error(w, "Database Error", http.StatusInternalServerError)
 		return
 	}
-
-	if counter == 0 {
-		// no instructions stored in db
-		return
-	}
-
-	rows, err := db.Query("select * from instruction")
-
-	if err != nil {
-		log.Fatalf("Error while trying to get the instrctions from the database: %v", err)
-	}
-
 	defer rows.Close()
-
-	var instructions []instruction
 
 	for rows.Next() {
 		var i instruction
 		if err := rows.Scan(&i.Name, &i.Instruction); err != nil {
-			log.Printf("Error while trying to scan the lines of the instruction: %v", err)
+			log.Printf("Scan Error: %v", err)
+			continue
 		}
 		instructions = append(instructions, i)
 	}
 
 	if err = rows.Err(); err != nil {
-		log.Fatalf("Error after iterating over lines: %v", err)
-	}
-
-	jsonData, err := json.MarshalIndent(instructions, "", " ")
-	if err != nil {
-		log.Fatalf("Error while json serialization: %v", err)
+		http.Error(w, "Error during iteration", http.StatusInternalServerError)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(jsonData)
-	if err != nil {
-		log.Printf("Error while writing json response: %v", err)
-	}
-
+	json.NewEncoder(w).Encode(instructions)
 }

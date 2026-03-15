@@ -5,9 +5,10 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   message: string;
+  isDelete?: boolean
 }
 
-export default function ErrorModal({ isOpen, onClose, message}: ModalProps) {
+export default function ErrorModal({ isOpen, onClose, message, isDelete}: ModalProps) {
 
     useEffect(() => {
         if (isOpen) {

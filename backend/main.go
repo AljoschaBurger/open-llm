@@ -67,6 +67,12 @@ func main() {
 		handleGetAllInstructions(db, w, r)
 	})
 
+	// delete a specific instruction
+	handleDeleteInstruction := handlers.HandleDeleteInstruction
+	mux.HandleFunc("/instruction/delete", func(w http.ResponseWriter, r *http.Request) {
+		handleDeleteInstruction(db, w, r)
+	})
+
 	log.Println("Backend running on Port :8080")
 	log.Fatal(http.ListenAndServe("0.0.0.0:8080", handler))
 }

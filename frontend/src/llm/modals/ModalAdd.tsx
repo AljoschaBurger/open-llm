@@ -89,7 +89,7 @@ export default function ModalAdd({ isOpen, onClose, title, setTrigger, trigger }
                 message={errorMessage} 
             />
             <div 
-                className="relative h-[70%] w-[70%] p-6 bg-gray-600 border border-gray-700 rounded-xl shadow-2xl"
+                className="relative h-[70%] w-[70%] p-6 bg-gray-600 border border-gray-700 rounded-xl shadow-2xl overflow-hidden"
                 onClick={(e) => e.stopPropagation()} 
             >
                 <div className="flex w-full h-full flex-col items-center gap-y-16 mb-4">
@@ -104,7 +104,7 @@ export default function ModalAdd({ isOpen, onClose, title, setTrigger, trigger }
                     >
                         ✕
                     </button>
-                    <div className="flex justify-center items-center w-full h-[5%]">
+                    <div className="flex justify-center items-center w-full h-10 flex-shrink-0">
                         <textarea
                             className={`flex items-center justify-center w-[80%] h-full rounded-lg p-3`}
                             spellCheck={false}
@@ -119,7 +119,7 @@ export default function ModalAdd({ isOpen, onClose, title, setTrigger, trigger }
                     </div>
                     <textarea
                         spellCheck={false}
-                        className="w-[80%] h-[80%] rounded-lg p-3"
+                        className="flex flex-shrink-0 w-[80%] h-[60%] rounded-lg p-3"
                         onChange={(e) => setInstructionValue(e.target.value)}
                         value={instructionValue}
                         placeholder="Write an instruction for the llm"

@@ -205,11 +205,11 @@ export default function Chat() {
     return (
         <div className="flex flex-row w-full bg-gray-800 justify-center relative">
           
-          <div className="flex ml-20 items-center justify-between h-screen flex-col w-[90%]">
+          <div className="flex ml-20 items-center justify-between h-screen flex-col w-[90%] ">
             <Header /> 
             {
               history.length !== 0 ? (
-                <div ref={messagesEndRef} onScroll={handleScroll} className="flex mt-5 flex-col flex-1 overflow-y-auto w-[70%] p-4 space-y-4 bg-gray-600 rounded-lg">
+                <div ref={messagesEndRef} onScroll={handleScroll} className="flex mt-5 flex-col flex-1 overflow-y-auto w-[70%] p-4 space-y-4 bg-gray-600 rounded-lg ">
               {
                 history.map(item => (
                   <div
@@ -243,7 +243,7 @@ export default function Chat() {
                           }}
                         />
                       ) : (
-                        <div>Loading...</div>
+                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-fuchsia-600"></div>
                       )
                     }
                   </div>
@@ -252,7 +252,7 @@ export default function Chat() {
               }
             </div>
               ) : (
-                <div className="flex justify-center bg-gray-300 p-4 text-xl rounded-lg shadow-fuchsia-600 shadow-lg border-2 border-purple-200">Try your local Open-llm instace with a prompt!</div>
+                <div className="flex justify-center bg-gray-300 p-4 text-xl rounded-lg shadow-fuchsia-600 shadow-lg border-2 border-purple-200 animate-bounce">Try your local Open-llm instace with a prompt!</div>
               )
             }            
             <div className="flex flex-row mt-10 mb-10 items-center justify-center w-[40%] gap-x-2">
@@ -267,12 +267,12 @@ export default function Chat() {
               <div className="flex ml-2 justify-end mb-1"><button onClick={clearLocalForage} disabled={Number(localStorageSize) === 0} className="disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 border h-10 text-white font-bold bg-purple-500 shadow-md shadow-purple-800 border-purple-400 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Clear</button></div>
             </div>
         </div>
-        <div className="absolute mt-16 right-10 top-4 bottom-0 flex flex-col items-center w-[12%] border h-[80%] border-gray-600 shadow-sm shadow-purple-800 rounded-lg">
+        <div className="overflow-hidden flex-shrink-0 absolute mt-16 right-10 top-4 bottom-0 flex flex-col items-center w-[12%] h-[80%] bg-gray-600 rounded-lg">
            {
             showInstructions  ? (
               <InstructionFileList onClose={() => {setShowInstructions(false)}}/>
             ) : (
-              <button className="flex flex-col gap-y-2 items-center justify-center w-[80%] h-[5%] bg-gray-600 mt-16 p-3 rounded-md hover:scale-110 transition-transform duration-200 text-white" onClick={() => {setShowInstructions(true)}}>Instruction Files</button>
+              <button className="flex flex-col gap-y-2 items-center justify-center w-[80%] h-[5%] bg-gray-800 font-bold mt-16 p-3 rounded-md hover:scale-110 transition-transform duration-200 text-white" onClick={() => {setShowInstructions(true)}}>Instruction Files</button>
             )
            }
         </div>
