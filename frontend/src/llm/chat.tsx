@@ -6,6 +6,10 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import InstructionFileList from "./InstructionFileList";
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+// @ts-ignore
+import 'katex/dist/katex.min.css';
 
 export default function Chat() {
     type Prompt = {
@@ -209,7 +213,7 @@ export default function Chat() {
             <Header /> 
             {
               history.length !== 0 ? (
-                <div ref={messagesEndRef} onScroll={handleScroll} className="flex mt-5 flex-col flex-1 overflow-y-auto w-[70%] p-4 space-y-4 bg-gray-600 rounded-lg ">
+                <div ref={messagesEndRef} onScroll={handleScroll} className="flex mt-5 flex-col flex-1 overflow-y-auto w-[70%] p-4 space-y-4 bg-gray-600 rounded-xl ">
               {
                 history.map(item => (
                   <div
@@ -222,6 +226,8 @@ export default function Chat() {
                     {
                       item.content !== "" ? (
                         <ReactMarkdown
+                          remarkPlugins={[remarkMath]}
+                          rehypePlugins={[rehypeKatex]}
                           children={item.content}
                           components={{
                             code({ node, inline, className, children, ...props }: any) {
@@ -263,16 +269,16 @@ export default function Chat() {
                 minRows={1}
                 onKeyDown={handleKeyDown}
               />
-              <div className="flex ml-2 justify-end mb-1"><button onClick={sendPrompt} disabled={prompt.length === 0} className="disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 border h-10 text-white font-bold bg-purple-500 shadow-md shadow-purple-800 border-purple-400 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Send</button></div>
-              <div className="flex ml-2 justify-end mb-1"><button onClick={clearLocalForage} disabled={Number(localStorageSize) === 0} className="disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 border h-10 text-white font-bold bg-purple-500 shadow-md shadow-purple-800 border-purple-400 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Clear</button></div>
+              <div className="flex ml-2 justify-end mb-1"><button onClick={sendPrompt} disabled={prompt.length === 0} className="disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50  h-10 text-white font-bold bg-purple-500 shadow-md shadow-purple-800 border-purple-400 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Send</button></div>
+              <div className="flex ml-2 justify-end mb-1"><button onClick={clearLocalForage} disabled={Number(localStorageSize) === 0} className="disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50  h-10 text-white font-bold bg-purple-500 shadow-md shadow-purple-800 border-purple-400 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Clear</button></div>
             </div>
         </div>
-        <div className="overflow-hidden flex-shrink-0 absolute mt-16 right-10 top-4 bottom-0 flex flex-col items-center w-[12%] h-[80%] bg-gray-600 rounded-lg">
+        <div className="overflow-hidden flex-shrink-0 absolute mt-16 right-10 top-4 bottom-0 flex flex-col items-center w-[12%] h-[80%] bg-gray-600 rounded-xl">
            {
             showInstructions  ? (
               <InstructionFileList onClose={() => {setShowInstructions(false)}}/>
             ) : (
-              <button className="flex flex-col gap-y-2 items-center justify-center w-[80%] h-[5%] bg-gray-800 font-bold mt-16 p-3 rounded-md hover:scale-110 transition-transform duration-200 text-white" onClick={() => {setShowInstructions(true)}}>Instruction Files</button>
+              <button className="flex flex-col gap-y-2 items-center justify-center w-[80%] h-[5%] bg-gray-800 font-bold mt-16 p-3 rounded-xl hover:scale-110 transition-transform duration-200 text-white" onClick={() => {setShowInstructions(true)}}>Instruction Files</button>
             )
            }
         </div>
