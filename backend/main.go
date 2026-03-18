@@ -19,7 +19,7 @@ func main() {
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:8080", "http://open-llm.lokal:3000"},
-		AllowedMethods:   []string{"POST", "GET", "DELETE", "PUT", "OPTIONS"},
+		AllowedMethods:   []string{"POST", "GET", "DELETE", "PATCH", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 	})
@@ -71,6 +71,16 @@ func main() {
 	handleDeleteInstruction := handlers.HandleDeleteInstruction
 	mux.HandleFunc("/instruction/delete", func(w http.ResponseWriter, r *http.Request) {
 		handleDeleteInstruction(db, w, r)
+	})
+
+	handleGetSpecificInstruction := handlers.HandleGetSpecificInstruction
+	mux.HandleFunc("/instruction/specific", func(w http.ResponseWriter, r *http.Request) {
+		handleGetSpecificInstruction(w, r, db)
+	})
+
+	handleUpdateInstruction := handlers.HandleUpdateInstruction
+	mux.HandleFunc("/instruction/update", func(w http.ResponseWriter, r *http.Request) {
+		handleUpdateInstruction(w, r, db)
 	})
 
 	log.Println("Backend running on Port :8080")

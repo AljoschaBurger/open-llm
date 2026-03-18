@@ -86,7 +86,7 @@ export default function ModalDelete({ isOpen, onClose, title, setTrigger, trigge
                     </button>
                     
                     <div className="flex w-full h-full flex-row justify-center items-center gap-x-16 mb-4">
-                        <button className="w-[10%] h-[15%] bg-fuchsia-500 font-bold text-white shadow-lg shadow-gray-800 rounded-full hover:scale-110 transition-transform duration-100" onClick={() => handleDeleteInstruction()}>Delete</button>
+                        <button className="w-[10%] h-[15%] bg-purple-500 font-bold text-white shadow-lg shadow-gray-800 rounded-full hover:scale-110 transition-transform duration-100" onClick={() => handleDeleteInstruction()}>Delete</button>
                         <button className="w-[10%] h-[15%] bg-red-500 font-bold text-white shadow-lg shadow-gray-800 rounded-full hover:scale-110 transition-transform duration-100" onClick={() => onClose()}>Cancel</button>
                     </div>
                 </div>

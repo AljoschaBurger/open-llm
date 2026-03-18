@@ -37,12 +37,4 @@ A free to use and containerized generative AI web application to use ollama llam
 ```
 
 ### Todos
-1. Add a handler to add an instruction file which has to be safed in the backend
-2. Add handler to change the current chat which changes the frontend trough a db call (chat history)
-3. Frontend
-4. Edit the handlePrompt_test.go that it is able to test db queries
-5. Update to new go version
-
-Test curl:
-
-curl -X POST http://localhost:8080/ask      -H "Content-Type: application/json"      -d '{"prompt": "Schreibe ein Gedicht über Golang"}'
+1. Performance issue because of often rerendering through useStates and writing in localforage in chat.tsx -> useage if useMemo() important and to exclude the history into a seperate component  

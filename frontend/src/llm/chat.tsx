@@ -8,6 +8,7 @@ import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import InstructionFileList from "./InstructionFileList";
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import ChatList from "./ChatList";
 // @ts-ignore
 import 'katex/dist/katex.min.css';
 
@@ -30,14 +31,8 @@ export default function Chat() {
     const [prompt, setPrompt] = useState("");
     const [isAtBottom, setIsAtBottom] = useState(true);
 
-    const getNextId = (): number => {
-      return history.length > 0 
-        ? Math.max(...history.map(p => p.id)) + 1
-        : 1;
-    }
-
     const addPromptToHistory = (currentPrompt: string): number => {
-      const newId: number = getNextId();
+      const newId: number = Date.now();
       const newPrompt: Prompt = {
         id: newId,
         type: "prompt",
@@ -51,7 +46,7 @@ export default function Chat() {
     };
 
     const addResponseToHistory = (): number => {
-      const newId: number = getNextId();
+      const newId: number = Date.now() + 1;
       const newResponse: Response = {
         id: newId,
         type: "response",
@@ -76,6 +71,12 @@ export default function Chat() {
 
         const responseId = addResponseToHistory();
 
+        // watchdog to check if somethin whent wrong while llm anwsers (timeout)
+        let lastChunkReceivedAt = Date.now();
+        let isFinished = false;
+
+        const TIMEOUT_MS = 10000;
+
         const payload: ChatRequest = { 
           prompt: currentPrompt
         };
@@ -93,45 +94,81 @@ export default function Chat() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+
+        if (!response.ok) {
+          setHistory(prev => prev.map(entry => 
+              entry.id === responseId ? { ...entry, content: "⚠️ An Error occured while calling the llm ⚠️" } : entry
+          ));
+
+          return;
+        }
     
         const reader = response.body!.getReader();
         const decoder = new TextDecoder();
-    
-        while (true) {
-          const { value, done } = await reader.read();
 
-          if (done) {
-            break
-          };
-    
-          const chunkText = decoder.decode(value).trim();
-
-          if (!chunkText) {
-            continue
-          };
-
-          const lines = chunkText.split("\n");
-          for (const line of lines) {
-            try {
-              const obj = JSON.parse(line);
-              if (obj.response) {
-                setHistory(prevHistory => {
-                  return prevHistory.map(entry => 
-                    entry.id === responseId && entry.type === "response"
-                      ? { ...entry, content: entry.content + obj.response }
-                      : entry
-                  );
-                });
-              }
-            } catch (err) {
-              console.warn("Invalid JSON chunk:", line);
+        const timeoutWatcher = setInterval(() => {
+            const timeSinceLastChunk = Date.now() - lastChunkReceivedAt;
+            if (!isFinished && timeSinceLastChunk > TIMEOUT_MS) {
+                console.error("LLM Stream stalled");
+                reader.cancel(); // Cuts the connection
+                clearInterval(timeoutWatcher);
+                
+                setHistory(prev => prev.map(entry => 
+                    entry.id === responseId && entry.content === "" 
+                        ? { ...entry, content: "⚠️ Connection timeout, please try again ⚠️" } 
+                        : entry
+                ));
             }
+        }, 2000);
+    
+        try {
+          while (true) {
+              const { value, done } = await reader.read();
+
+              if (done) {
+                isFinished = true;
+                break
+              };
+              
+              lastChunkReceivedAt = Date.now(); // update timestamp
+              const chunkText = decoder.decode(value).trim();
+
+              if (!chunkText) {
+                continue
+              };
+
+              const lines = chunkText.split("\n");
+              for (const line of lines) {
+                try {
+                  const obj = JSON.parse(line);
+                  if (obj.done) {
+                    isFinished = true;
+                    // here maybe a copy button?
+                  }
+                  if (obj.response) {
+                    setHistory(prevHistory => {
+                      return prevHistory.map(entry => 
+                        entry.id === responseId && entry.type === "response"
+                          ? { ...entry, content: entry.content + obj.response }
+                          : entry
+                      );
+                    });
+                  }
+                } catch (err) {
+                  console.warn("Invalid JSON chunk:", line);
+                }
+            }
+          }
+        } catch (error) {
+          console.error("Stream error:", error);
+        } finally {
+        isFinished = true;
+        clearInterval(timeoutWatcher);
         }
-    }
     };
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (event.key === 'Enter') {
+      if (event.key === 'Enter' && !event.shiftKey) {
         if (prompt.trim() !== '') {
           event.preventDefault();
           sendPrompt();
@@ -207,58 +244,19 @@ export default function Chat() {
     const [showInstructions, setShowInstructions] = useState(false);
 
     return (
-        <div className="flex flex-row w-full bg-gray-800 justify-center relative">
+        <div className="flex flex-row w-full bg-gray-900 justify-center relative">
           
           <div className="flex ml-20 items-center justify-between h-screen flex-col w-[90%] ">
             <Header /> 
             {
               history.length !== 0 ? (
-                <div ref={messagesEndRef} onScroll={handleScroll} className="flex mt-5 flex-col flex-1 overflow-y-auto w-[70%] p-4 space-y-4 bg-gray-600 rounded-xl ">
-              {
-                history.map(item => (
-                  <div
-                    key={item.id}
-                    className={`p-3 rounded-lg w-[80%] ${item.type === "prompt" ? "bg-blue-500 text-white self-end" : "bg-gray-200 text-gray-800 self-start"}`}
-                  >
-                    <div className="font-extrabold text-sm mb-1">
-                        {item.type === "prompt" ? "You" : "Open-llm"}
-                    </div>
-                    {
-                      item.content !== "" ? (
-                        <ReactMarkdown
-                          remarkPlugins={[remarkMath]}
-                          rehypePlugins={[rehypeKatex]}
-                          children={item.content}
-                          components={{
-                            code({ node, inline, className, children, ...props }: any) {
-                              const match = /language-(\w+)/.exec(className || '');
-                              return !inline && match ? (
-                                <SyntaxHighlighter
-                                  children={String(children).replace(/\n$/, '')}
-                                  style={atomDark} // Theme
-                                  language={match[1]}
-                                  PreTag="div"
-                                  {...props}
-                                />
-                              ) : (
-                                <code className={className} {...props}>
-                                  {children}
-                                </code>
-                              );
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-fuchsia-600"></div>
-                      )
-                    }
-                  </div>
-                ))
-              
-              }
-            </div>
+                <ChatList 
+                  history={history} 
+                  messagesEndRef={messagesEndRef} 
+                  handleScroll={handleScroll} 
+                />
               ) : (
-                <div className="flex justify-center bg-gray-300 p-4 text-xl rounded-lg shadow-fuchsia-600 shadow-lg border-2 border-purple-200 animate-bounce">Try your local Open-llm instace with a prompt!</div>
+                <div className="flex justify-center bg-gray-300 p-4 text-xl rounded-lg shadow-fuchsia-600 shadow-lg border-b-2 border-purple-100 animate-bounce font-mono">Try your local Open-llm instace with a prompt!</div>
               )
             }            
             <div className="flex flex-row mt-10 mb-10 items-center justify-center w-[40%] gap-x-2">
@@ -269,8 +267,8 @@ export default function Chat() {
                 minRows={1}
                 onKeyDown={handleKeyDown}
               />
-              <div className="flex ml-2 justify-end mb-1"><button onClick={sendPrompt} disabled={prompt.length === 0} className="disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50  h-10 text-white font-bold bg-purple-500 shadow-md shadow-purple-800 border-purple-400 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Send</button></div>
-              <div className="flex ml-2 justify-end mb-1"><button onClick={clearLocalForage} disabled={Number(localStorageSize) === 0} className="disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50  h-10 text-white font-bold bg-purple-500 shadow-md shadow-purple-800 border-purple-400 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Clear</button></div>
+              <div className="flex ml-2 justify-end mb-1"><button onClick={sendPrompt} disabled={prompt.length === 0} className="disabled:shadow-none disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 hover:border-b border-purple-300  h-10 text-white font-mono bg-purple-500 shadow-md hover:shadow-purple-600 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Send</button></div>
+              <div className="flex ml-2 justify-end mb-1"><button onClick={clearLocalForage} disabled={Number(localStorageSize) === 0} className="disabled:shadow-none disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 hover:border-b border-purple-300 h-10 text-white font-mono bg-purple-500 shadow-md hover:shadow-purple-600 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Clear</button></div>
             </div>
         </div>
         <div className="overflow-hidden flex-shrink-0 absolute mt-16 right-10 top-4 bottom-0 flex flex-col items-center w-[12%] h-[80%] bg-gray-600 rounded-xl">
@@ -278,7 +276,7 @@ export default function Chat() {
             showInstructions  ? (
               <InstructionFileList onClose={() => {setShowInstructions(false)}}/>
             ) : (
-              <button className="flex flex-col gap-y-2 items-center justify-center w-[80%] h-[5%] bg-gray-800 font-bold mt-16 p-3 rounded-xl hover:scale-110 transition-transform duration-200 text-white" onClick={() => {setShowInstructions(true)}}>Instruction Files</button>
+              <button className="flex flex-col gap-y-2 items-center justify-center w-[80%] h-[5%] bg-gray-800 font-bold mt-16 p-3 rounded-xl hover:scale-110 transition-transform duration-200 text-white font-mono" onClick={() => {setShowInstructions(true)}}>Instruction Files</button>
             )
            }
         </div>

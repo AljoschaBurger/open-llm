@@ -104,7 +104,7 @@ export default function ModalAdd({ isOpen, onClose, title, setTrigger, trigger }
                     >
                         ✕
                     </button>
-                    <div className="flex justify-center items-center w-full h-10 flex-shrink-0">
+                    <div className="flex justify-center items-center w-full h-12 flex-shrink-0">
                         <textarea
                             className={`flex items-center justify-center w-[80%] h-full rounded-lg p-3`}
                             spellCheck={false}
