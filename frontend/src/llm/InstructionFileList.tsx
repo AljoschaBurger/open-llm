@@ -17,6 +17,7 @@ export default function InstructionFileList({ onClose }: InstructionFileListProp
 
     const [instructionFiles, setInstructionFiles] = useState<instructionFile[]>([]);
     const [trigger, setTrigger] = useState(false);
+    const [activeInstruction, setActiveInstruction] = useState(localStorage.getItem("activeInstruction") ?? "");
 
     useEffect(() => {
         async function getData() {
@@ -30,7 +31,8 @@ export default function InstructionFileList({ onClose }: InstructionFileListProp
 
                 const text = await response.text(); 
                 const res = text ? JSON.parse(text) : []; 
-
+                
+                setActiveInstruction(localStorage.getItem('activeInstruction') || '');
                 setInstructionFiles(res || []);
             } catch(error) {    
                 console.error(error);
@@ -39,7 +41,7 @@ export default function InstructionFileList({ onClose }: InstructionFileListProp
         getData();
     }, [trigger]);
 
-    const [activeInstruction, setActiveInstruction] = useState(localStorage.getItem("activeInstruction") ?? "");
+    
 
     const handleClick = (index: number, name: string) => {
         if ((activeInstruction === name)) {

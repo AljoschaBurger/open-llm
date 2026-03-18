@@ -107,7 +107,7 @@ export default function ModalEdit({ isOpen, onClose, title, setTrigger, trigger,
                 console.error(errorMessage + errorData);
                 return;
             }
-
+            
             localStorage.setItem('activeInstruction', nameValue);
             setTrigger(!trigger);
             onClose();
