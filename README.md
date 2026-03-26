@@ -37,4 +37,5 @@ A free to use and containerized generative AI web application to use ollama llam
 ```
 
 ### Todos
-1. Performance issue because of often rerendering through useStates and writing in localforage in chat.tsx -> useage if useMemo() important and to exclude the history into a seperate component  
+1. store the instruction into the llm call
+2. In Syntaxhighlighter compontent a possiblity to copy code etc.

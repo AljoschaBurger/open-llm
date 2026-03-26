@@ -4,7 +4,7 @@ import Chat from "./llm/chat";
 export default function App() {
 
   return (
-    <div className="">
+    <div className="h-screen w-screen overflow-hidden">
       <Chat />
     </div>
     

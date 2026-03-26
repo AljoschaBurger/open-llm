@@ -40,6 +40,7 @@ func main() {
 		log.Fatal("Error while trying to connect to the database", err)
 		return
 	}
+
 	log.Println("Successfully connected to database")
 
 	// test connection with "ping"
@@ -56,9 +57,10 @@ func main() {
 	})
 
 	// creates instruction file with user input
+	createInstructionRepo := &handlers.SQLCreateInstructionStore{DB: db}
 	handleCreateInstruction := handlers.HandleCreateInstruction
 	mux.HandleFunc("/create-instruction", func(w http.ResponseWriter, r *http.Request) {
-		handleCreateInstruction(db, w, r)
+		handleCreateInstruction(createInstructionRepo, w, r)
 	})
 
 	// get all instructions for the instruction list
@@ -68,9 +70,10 @@ func main() {
 	})
 
 	// delete a specific instruction
+	deleteInstructionRepo := &handlers.SQLDeleteInstructionStore{DB: db}
 	handleDeleteInstruction := handlers.HandleDeleteInstruction
 	mux.HandleFunc("/instruction/delete", func(w http.ResponseWriter, r *http.Request) {
-		handleDeleteInstruction(db, w, r)
+		handleDeleteInstruction(deleteInstructionRepo, w, r)
 	})
 
 	handleGetSpecificInstruction := handlers.HandleGetSpecificInstruction

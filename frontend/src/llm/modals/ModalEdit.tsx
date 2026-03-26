@@ -141,11 +141,11 @@ export default function ModalEdit({ isOpen, onClose, title, setTrigger, trigger,
                     </div>
                 ) : (
                     <div 
-                className="relative h-[70%] w-[70%] p-6 bg-gray-600 border border-gray-700 rounded-xl shadow-2xl overflow-hidden"
+                className="relative h-[90%] w-[70%] p-6 bg-gray-600 border border-gray-700 rounded-xl shadow-2xl overflow-hidden"
                 onClick={(e) => e.stopPropagation()} 
             >
-                <div className="flex w-full h-full flex-col items-center gap-y-16 mb-4">
-                    <h2 className="text-2xl font-bold text-white">{title}</h2>
+                <div className="flex flex-shrink-0 w-full h-full flex-col items-center gap-y-16 mb-4">
+                    <h2 className="text-2xl font-bold font-mono text-white">Update the instruction: {nameValue}</h2>
                     <button 
                         onClick={() => {
                             onClose();
@@ -161,13 +161,13 @@ export default function ModalEdit({ isOpen, onClose, title, setTrigger, trigger,
                             className={`flex items-center justify-center w-[80%] h-full rounded-lg p-3`}
                             spellCheck={false}
                             onChange={(e) => {
-                                nameLengthCounter < 20 ? setNameValue(e.target.value) : e.target.value < nameValue ? setNameValue(e.target.value) : setNameValue(nameValue)
+                                nameLengthCounter < 16 ? setNameValue(e.target.value) : e.target.value < nameValue ? setNameValue(e.target.value) : setNameValue(nameValue)
                             }}
                             value={nameValue}
                             placeholder="Name your instruction file (max. length 20)"
                         >
                         </textarea>
-                        <span className={`${nameValue.length >= 20 ? "text-red-500" : "text-white"} absolute right-32 top-32`}>{nameLengthCounter} / 20</span>
+                        <span className={`${nameValue.length >= 16 ? "text-red-500" : "text-white"} absolute right-20 top-32`}>{nameLengthCounter} / 16</span>
                     </div>
                     <textarea
                         spellCheck={false}
@@ -177,7 +177,7 @@ export default function ModalEdit({ isOpen, onClose, title, setTrigger, trigger,
                         placeholder="Write an instruction for the llm"
                     >
                     </textarea>
-                    <button onClick={() => updateInstruction()} className="w-[5%] h-[5%] bg-green-500 shadow-lg shadow-gray-800 rounded-full hover:scale-110 transition-transform duration-100" >Update</button>
+                    <button onClick={() => updateInstruction()} className="w-[15%] h-[8%] text-white font-bold font-mono bg-green-500 shadow-lg shadow-gray-800 rounded-full hover:scale-110 transition-transform duration-100" >Update</button>
                 </div>
             </div>
                 )

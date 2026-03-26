@@ -11,3 +11,13 @@ type OllamaRequest struct {
 	Prompt string `json:"prompt"`
 	Stream bool   `json:"stream"`
 }
+
+type ChatMessage struct {
+	Role    string `json:"role"` // "system", "user" oder "assistant"
+	Content string `json:"content"`
+}
+
+type OllamaChatResponse struct {
+	Message ChatMessage `json:"message"`
+	Done    bool        `json:"done"`
+}

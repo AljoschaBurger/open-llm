@@ -73,11 +73,11 @@ export default function ModalDelete({ isOpen, onClose, title, setTrigger, trigge
                 isDelete={true} 
             />
             <div 
-                className="relative h-[30%] w-[70%] p-6 bg-gray-600 border border-gray-700 rounded-xl shadow-2xl"
+                className="flex relative flex-shrink-0 h-[40%] w-[70%] p-6 bg-gray-600 border border-gray-700 rounded-xl shadow-2xl"
                 onClick={(e) => e.stopPropagation()} 
             >
                 <div className="flex w-full h-full flex-col justify-center items-center gap-y-5 mb-4">
-                    <h2 className="text-2xl font-bold text-white">{title} ?</h2>
+                    <h2 className="text-2xl font-bold font-mono text-white">{title} ?</h2>
                     <button 
                         onClick={() => onClose()}
                         className="absolute text-2xl right-2 top-1 text-red-500 hover:text-red-400 hover:scale-150 transition-transform duration-100"
@@ -86,8 +86,8 @@ export default function ModalDelete({ isOpen, onClose, title, setTrigger, trigge
                     </button>
                     
                     <div className="flex w-full h-full flex-row justify-center items-center gap-x-16 mb-4">
-                        <button className="w-[10%] h-[15%] bg-purple-500 font-bold text-white shadow-lg shadow-gray-800 rounded-full hover:scale-110 transition-transform duration-100" onClick={() => handleDeleteInstruction()}>Delete</button>
-                        <button className="w-[10%] h-[15%] bg-red-500 font-bold text-white shadow-lg shadow-gray-800 rounded-full hover:scale-110 transition-transform duration-100" onClick={() => onClose()}>Cancel</button>
+                        <button className="w-[15%] h-[20%] bg-green-500 font-bold font-mono text-white shadow-lg shadow-gray-800 rounded-full hover:scale-110 transition-transform duration-100" onClick={() => handleDeleteInstruction()}>Delete</button>
+                        <button className="w-[15%] h-[20%] bg-red-500 font-bold font-mono text-white shadow-lg shadow-gray-800 rounded-full hover:scale-110 transition-transform duration-100" onClick={() => onClose()}>Cancel</button>
                     </div>
                 </div>
             </div>
