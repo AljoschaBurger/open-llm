@@ -71,21 +71,21 @@ export default function InstructionFileList({ onClose }: InstructionFileListProp
 
 
     return (
-        <div className="h-[40%] w-[90%]">
+        <div className="h-[30%] w-[90%] mt-8 mb-8">
             <ModalAdd isOpen={isAddModalOpen} onClose={handleCloseModalAdd} title="Add a new Instruction" setTrigger={setTrigger} trigger={trigger} />
             <ModalDelete isOpen={isDeleteModalOpen} onClose={handleCloseModalDelete} title={"Are you sure your whant to delete the instruction: '" + localStorage.getItem("activeInstruction") + "'"} trigger={trigger} setTrigger={setTrigger} />
             <ModalEdit isOpen={isEditModalOpen} onClose={handleCloseEditModal} title={"Are you sure your whant to delete the instruction: '" + localStorage.getItem("activeInstruction") + "'"} trigger={trigger} setTrigger={setTrigger} instructionName={activeInstruction}/>
 
             
-            <div className="flex overflow-hidden flex-shrink-0 mt-8 flex-col gap-y-4 max-h-[calc(100%-4rem)] w-full bg-gray-800 p-3 rounded-xl relative">
+            <div className="flex overflow-hidden justify-between flex-shrink-0 flex-col gap-y-4 h-full w-full bg-gray-800 p-2 rounded-xl relative">
                 <button 
                     onClick={onClose} 
-                    className="flex justify-center items-center text-2xl rounded-xl text-red-400 absolute top-0 right-2 hover:scale-150 transition-transform duration-100"
+                    className="flex justify-center items-center text-2xl rounded-xl text-red-400 absolute top-1 right-2 hover:scale-150 transition-transform duration-100"
                 >
                     x
                 </button>
                 
-                <div className="flex gap-y-3 p-4 flex-col items-center overflow-y-scroll max-h-[calc(100%-80px)] font-mono">
+                <div className="flex gap-y-3 p-4 flex-col items-center overflow-y-scroll max-h-[calc(100%-40px)] font-mono">
                     {
                         instructionFiles.length !== 0 ? (
                             instructionFiles.map((file, index) => (

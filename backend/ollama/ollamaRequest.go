@@ -1,15 +1,19 @@
 package ollama
 
 type PromptRequest struct {
-	Instruction   string `json:"instruction"` // optional
-	CurrentChatId int    `json:"currentChatId"`
-	Prompt        string `json:"prompt"`
+	Instruction   string  `json:"instruction"` // optional
+	CurrentChatId int     `json:"currentChatId"`
+	Prompt        string  `json:"prompt"`
+	Temperature   float64 `json:"temperature"`
+	TopP          float64 `json:"top_p"`
+	NumPredict    int     `json:"num_predict"`
 }
 
-type OllamaRequest struct {
-	Model  string `json:"model"`
-	Prompt string `json:"prompt"`
-	Stream bool   `json:"stream"`
+type OllamaChatRequest struct {
+	Model    string        `json:"model"`
+	Messages []ChatMessage `json:"messages"`
+	Stream   bool          `json:"stream"`
+	Options  Options       `json:"options"`
 }
 
 type ChatMessage struct {
@@ -20,4 +24,24 @@ type ChatMessage struct {
 type OllamaChatResponse struct {
 	Message ChatMessage `json:"message"`
 	Done    bool        `json:"done"`
+}
+
+type Options struct {
+	Temperature float64 `json:"temperature,omitempty"` // temp. of 0.2 - 0-4 are strict, above more creative
+	NumPredict  int     `json:"num_predict,omitempty"` //lenght of the answers
+	TopP        float64 `json:"top_p,omitempty"`       // quality filter - 0.1 = only top values (facts) - 0.5 = mixed - 1 = everything is allowed
+}
+
+func FallbackFloat(val float64, def float64) float64 {
+	if val <= 0 {
+		return def
+	}
+	return val
+}
+
+func FallbackInt(val int, def int) int {
+	if val <= 0 {
+		return def
+	}
+	return val
 }

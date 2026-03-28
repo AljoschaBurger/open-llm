@@ -15,10 +15,10 @@ import (
 var OllamaHTTPClient = &http.Client{}
 
 // Ollama and docker information
-var usedModel = "llama3.1:8b-instruct-q4_1"                                      // the specific llm model
-var usedContainer = "llm"                                                        // the container name from the llm defined in the docker-compose.yaml file
-var usedPort = "11434"                                                           // the port where the llm is running
-var OllamaBaseURL = "http://" + usedContainer + ":" + usedPort + "/api/generate" // full URL with endpoint
+var usedModel = "llama3.1:8b-instruct-q4_1"                                  // the specific llm model
+var usedContainer = "llm"                                                    // the container name from the llm defined in the docker-compose.yaml file
+var usedPort = "11434"                                                       // the port where the llm is running
+var ollamaBaseURL = "http://" + usedContainer + ":" + usedPort + "/api/chat" // full URL with endpoint
 
 func checkForTable(db *sql.DB, dbName string, tableName string) (bool, error) {
 	query := `select count(*) from information_schema.TABLES where TABLE_SCHEMA = ? AND TABLE_NAME = ?`
@@ -50,14 +50,17 @@ func HandlePrompt(
 		return
 	}
 
+	var messages []ollama.ChatMessage
+
 	// if there is an instruction inside of the request - put it in the beginning of the prompt
 	if req.Instruction != "" {
 		doesInstructionExist, err := checkForTable(db, "llm-db", "instruction")
 		if !doesInstructionExist {
-			db.Exec("create table if not exists instruction (name varchar(255) not null primary key, instruction TEXT not null)")
+			db.Exec("CREATE TABLE IF NOT EXISTS instruction (name varchar(255) NOT NULL PRIMARY KEY, instruction TEXT NOT NULL)")
 		}
 		var instruction string
-		err = db.QueryRow("select instruction from instruction where name = ?", req.Instruction).Scan(&instruction)
+		err = db.QueryRow("SELECT instruction FROM instruction WHERE name = ?", req.Instruction).Scan(&instruction)
+
 		if err != nil {
 			if err == sql.ErrNoRows {
 				http.Error(w, "Instruction file not found", http.StatusNotFound)
@@ -66,29 +69,37 @@ func HandlePrompt(
 				http.Error(w, "Failed to get instruction from database", http.StatusInternalServerError)
 				return
 			}
+		} else {
+			messages = append(messages, ollama.ChatMessage{
+				Role:    "system",
+				Content: instruction,
+			})
 		}
-
-		req.Prompt = instruction + req.Prompt
 	}
 
-	// build the request-struct out of the validated prompt
-	ollamaRequest := ollama.OllamaRequest{
-		Model:  usedModel,  // default should be llama3.1:8b-instruct-q4_1
-		Prompt: req.Prompt, //the validated prompt
-		Stream: true,       //needs to be true
+	messages = append(messages, ollama.ChatMessage{
+		Role:    "user",
+		Content: req.Prompt,
+	})
+
+	ollamaReq := ollama.OllamaChatRequest{
+		Model:    usedModel,
+		Messages: messages,
+		Stream:   true,
+		Options: ollama.Options{
+			Temperature: ollama.FallbackFloat(req.Temperature, 0.2),
+			TopP:        ollama.FallbackFloat(req.TopP, 0.4),
+			NumPredict:  ollama.FallbackInt(req.NumPredict, 1000),
+		},
 	}
 
 	// transforms the request-struct into json bytes to be handled by io.Reader
-	body, err := json.Marshal(ollamaRequest)
-	if err != nil {
-		http.Error(w, "Failed to marshal request", 500)
-		return
-	}
+	body, _ := json.Marshal(ollamaReq)
 
 	// builds a http-request out of the json serialized struct
 	ollamaHTTPReq, err := http.NewRequest(
 		"POST",                // Method
-		OllamaBaseURL,         // container url from the llm
+		ollamaBaseURL,         // container url from the llm
 		bytes.NewBuffer(body), // the actual json body with the information from the user request as bytes
 	)
 
@@ -100,17 +111,16 @@ func HandlePrompt(
 	ollamaHTTPReq.Header.Set("Content-Type", "application/json")
 
 	// calls the request through the given client and get a response
-	client := OllamaHTTPClient
-	resp, err := client.Do(ollamaHTTPReq)
+	resp, err := OllamaHTTPClient.Do(ollamaHTTPReq)
 	if err != nil {
-		http.Error(w, "Failed to contact Ollama", 500)
+		http.Error(w, "Ollama is currently offline", 500)
 		return
 	}
 
 	defer resp.Body.Close() // reponse-socket needs to be closed to release the information
 
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Transfer-Encoding", "chunked") // chunked is importend to send the splitted information to the frontend (streamed)
+	w.Header().Set("Content-Type", "application/x-ndjson")
+	//w.Header().Set("Transfer-Encoding", "chunked") // chunked is importend to send the splitted information to the frontend (streamed)
 
 	flusher, ok := w.(http.Flusher) // check if the responseWriter is able to flush
 	if !ok {
@@ -119,6 +129,10 @@ func HandlePrompt(
 	}
 
 	scanner := bufio.NewScanner(resp.Body) //scans the response from the llm
+	const maxCapacity = 512 * 1024         //512 KB
+	buf := make([]byte, maxCapacity)
+	scanner.Buffer(buf, maxCapacity)
+
 	for scanner.Scan() {
 		line := scanner.Text()       // every line is a chunk send by ollama
 		w.Write([]byte(line + "\n")) // immediately sends the current line to the frontend

@@ -11,6 +11,7 @@ import rehypeKatex from 'rehype-katex';
 import ChatList from "./ChatList";
 // @ts-ignore
 import 'katex/dist/katex.min.css';
+import FineTuning from "./FineTuning";
 
 export default function Chat() {
     type Prompt = {
@@ -67,6 +68,9 @@ export default function Chat() {
         interface ChatRequest {
           prompt: string;
           instruction?: string;
+          temperature: number;
+          top_p: number;
+          num_predict: number;
         }
 
         const responseId = addResponseToHistory();
@@ -78,7 +82,10 @@ export default function Chat() {
         const TIMEOUT_MS = 10000;
 
         const payload: ChatRequest = { 
-          prompt: currentPrompt
+          prompt: currentPrompt,
+          temperature: parseFloat(localStorage.getItem("temperature") || ""),
+          top_p: parseFloat(localStorage.getItem("topP") || ""),
+          num_predict: parseInt(localStorage.getItem("numPredict") || ""),
         };
 
         const instruction = localStorage.getItem("activeInstruction");
@@ -145,15 +152,18 @@ export default function Chat() {
                     isFinished = true;
                     // here maybe a copy button?
                   }
-                  if (obj.response) {
-                    setHistory(prevHistory => {
-                      return prevHistory.map(entry => 
-                        entry.id === responseId && entry.type === "response"
-                          ? { ...entry, content: entry.content + obj.response }
-                          : entry
-                      );
-                    });
-                  }
+
+                  const newContent = obj.message?.content;
+
+                  if (newContent) { // Neues Feld bei /api/chat
+                      setHistory(prevHistory => {
+                        return prevHistory.map(entry => 
+                          entry.id === responseId && entry.type === "response"
+                            ? { ...entry, content: entry.content + newContent }
+                            : entry
+                        );
+                      });
+                    }
                 } catch (err) {
                   console.warn("Invalid JSON chunk:", line);
                 }
@@ -242,6 +252,7 @@ export default function Chat() {
     }, [history]);
 
     const [showInstructions, setShowInstructions] = useState(false);
+    const [showFineTuning, setShowFineTuning] = useState(false);
 
     return (
         <div className="flex flex-row w-full bg-gray-900 justify-center relative">
@@ -271,14 +282,22 @@ export default function Chat() {
               <div className="flex ml-2 justify-end mb-1"><button onClick={clearLocalForage} disabled={Number(localStorageSize) === 0} className="disabled:shadow-none disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 hover:border-b border-purple-300 h-10 text-white font-mono bg-purple-500 shadow-md hover:shadow-purple-600 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Clear</button></div>
             </div>
         </div>
-        <div className="hidden overflow-hidden flex-shrink-0 absolute right-4 mb-32 bottom-0 xl:flex flex-col items-center w-[13%] h-[78%] bg-gray-600 rounded-xl">
+        <div className="hidden overflow-hidden flex-shrink-1 absolute right-4 mb-32 bottom-0 xl:flex flex-col items-center justify-start w-[13%] h-[78%] bg-gray-600 rounded-xl">
            {
             showInstructions  ? (
-              <InstructionFileList onClose={() => {setShowInstructions(false)}}/>
+              <InstructionFileList onClose={() => {setShowInstructions(false)}} />
             ) : (
-              <button className="flex flex-col gap-y-2  items-center justify-center w-[80%] h-[8%] bg-gray-800 font-bold mt-8 text-sm xl:text-md p-10 overflow-y-hidden xl:p-2 rounded-xl hover:scale-110 transition-transform duration-200 text-white font-mono" onClick={() => {setShowInstructions(true)}}>Instruction Files</button>
+              <button className="flex flex-col gap-y-2 mb-8 items-center justify-center w-[80%] h-[8%] bg-gray-800 font-bold mt-8 text-sm xl:text-md p-10 overflow-y-hidden xl:p-2 rounded-xl hover:scale-110 transition-transform duration-200 text-white font-mono" onClick={() => {setShowInstructions(true)}}>Instruction Files</button>
             )
            }
+           {
+            showFineTuning ? (
+              <FineTuning onClose={() => {setShowFineTuning(false)}} />
+            ) : (
+              <button className="flex flex-col gap-y-2  items-center justify-center w-[80%] h-[8%] bg-gray-800 font-bold text-sm xl:text-md p-10 overflow-y-hidden xl:p-2 rounded-xl hover:scale-110 transition-transform duration-200 text-white font-mono" onClick={() => {setShowFineTuning(true)}}>Fine-Tuning</button>
+            )
+           }
+           
         </div>
         </div>
     )
