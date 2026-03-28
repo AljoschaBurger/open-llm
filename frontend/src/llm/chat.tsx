@@ -31,6 +31,7 @@ export default function Chat() {
     const [history, setHistory] = useState<ChatEntry[]>([]);
     const [prompt, setPrompt] = useState("");
     const [isAtBottom, setIsAtBottom] = useState(true);
+    const [prompting, setPrompting] = useState(false);
 
     const addPromptToHistory = (currentPrompt: string): number => {
       const newId: number = Date.now();
@@ -57,6 +58,8 @@ export default function Chat() {
       setHistory((prevHistory) => [...prevHistory, newResponse]);
       return newId;
     }
+
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     const sendPrompt = async () => {
         updateLocalStorageLength();
@@ -94,15 +97,21 @@ export default function Chat() {
             payload.instruction = instruction;
         }
 
-        console.log(localStorage.getItem("activeInstruction"));
+
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
+        setPrompting(true);
 
         const response = await fetch("http://localhost:8080/ask", {
           method: "POST",
+          signal: controller.signal,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
+          setPrompting(false);
           setHistory(prev => prev.map(entry => 
               entry.id === responseId ? { ...entry, content: "⚠️ An Error occured while calling the llm ⚠️" } : entry
           ));
@@ -118,6 +127,7 @@ export default function Chat() {
             if (!isFinished && timeSinceLastChunk > TIMEOUT_MS) {
                 console.error("LLM Stream stalled");
                 reader.cancel(); // Cuts the connection
+                setPrompting(false);
                 clearInterval(timeoutWatcher);
                 
                 setHistory(prev => prev.map(entry => 
@@ -134,6 +144,7 @@ export default function Chat() {
 
               if (done) {
                 isFinished = true;
+                setPrompting(false);
                 break
               };
               
@@ -150,12 +161,13 @@ export default function Chat() {
                   const obj = JSON.parse(line);
                   if (obj.done) {
                     isFinished = true;
+                    setPrompting(false);
                     // here maybe a copy button?
                   }
 
                   const newContent = obj.message?.content;
 
-                  if (newContent) { // Neues Feld bei /api/chat
+                  if (newContent) {
                       setHistory(prevHistory => {
                         return prevHistory.map(entry => 
                           entry.id === responseId && entry.type === "response"
@@ -173,6 +185,7 @@ export default function Chat() {
           console.error("Stream error:", error);
         } finally {
         isFinished = true;
+        setPrompting(false);
         clearInterval(timeoutWatcher);
         }
     };
@@ -251,6 +264,14 @@ export default function Chat() {
       updateLocalStorageLength();
     }, [history]);
 
+    const handleStopClick = () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    }
+      
+    
+
     const [showInstructions, setShowInstructions] = useState(false);
     const [showFineTuning, setShowFineTuning] = useState(false);
 
@@ -278,8 +299,15 @@ export default function Chat() {
                 minRows={1}
                 onKeyDown={handleKeyDown}
               />
-              <div className="flex ml-2 justify-end mb-1"><button onClick={sendPrompt} disabled={prompt.length === 0} className="disabled:shadow-none disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 hover:border-b border-purple-300  h-10 text-white font-mono bg-purple-500 shadow-md hover:shadow-purple-600 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Send</button></div>
+              <div className="flex ml-2 justify-end mb-1"><button onClick={sendPrompt} disabled={prompt.length === 0} className="disabled:shadow-none disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 hover:border-b border-purple-300  h-10 text-white font-mono bg-purple-500 shadow-md hover:shadow-purple-600 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200"></button></div>
               <div className="flex ml-2 justify-end mb-1"><button onClick={clearLocalForage} disabled={Number(localStorageSize) === 0} className="disabled:shadow-none disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 hover:border-b border-purple-300 h-10 text-white font-mono bg-purple-500 shadow-md hover:shadow-purple-600 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Clear</button></div>
+              {
+                prompting ? (
+                  <div className="flex ml-2 justify-end mb-1"><button onClick={handleStopClick} className="h-10 w-10 animate-pulse text-white font-mono bg-red-500 shadow-md rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">&#9633;</button></div>
+                ) : (
+                  <div className="flex ml-2 justify-end mb-1"></div>
+                )
+              }
             </div>
         </div>
         <div className="hidden overflow-hidden flex-shrink-1 absolute right-4 mb-32 bottom-0 xl:flex flex-col items-center justify-start w-[13%] h-[78%] bg-gray-600 rounded-xl">

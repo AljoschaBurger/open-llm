@@ -96,8 +96,11 @@ func HandlePrompt(
 	// transforms the request-struct into json bytes to be handled by io.Reader
 	body, _ := json.Marshal(ollamaReq)
 
+	ctx := r.Context()
+
 	// builds a http-request out of the json serialized struct
-	ollamaHTTPReq, err := http.NewRequest(
+	ollamaHTTPReq, err := http.NewRequestWithContext(
+		ctx,
 		"POST",                // Method
 		ollamaBaseURL,         // container url from the llm
 		bytes.NewBuffer(body), // the actual json body with the information from the user request as bytes
@@ -113,6 +116,9 @@ func HandlePrompt(
 	// calls the request through the given client and get a response
 	resp, err := OllamaHTTPClient.Do(ollamaHTTPReq)
 	if err != nil {
+		if ctx.Err() != nil {
+			return
+		}
 		http.Error(w, "Ollama is currently offline", 500)
 		return
 	}

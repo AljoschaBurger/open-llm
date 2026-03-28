@@ -92,7 +92,7 @@ export default function InstructionFileList({ onClose }: InstructionFileListProp
                                 activeInstruction == file.name ? (
                                     <button onClick={() => handleClick(index, file.name)} key={index} className="flex overflow-hidden items-center justify-center text-sm h-10 p-3 w-[90%] bg-white border-purple-300 shadow-md shadow-purple-600 border-b-2 rounded-full scale-110 transition-transform duration-200 flex-shrink-0">{file.name}</button>
                                     ) : (
-                                    <button onClick={() => handleClick(index, file.name)} key={index} className="flex items-center justify-center text-sm h-10 border p-3 w-[90%] border-transparent bg-white rounded-full hover:scale-105 transition-transform duration-200 overflow-hidden flex-shrink-0">{file.name}</button>
+                                    <button onClick={() => handleClick(index, file.name)} key={index} className="flex items-center justify-center text-sm h-10 border p-3 w-[90%] border-transparent bg-white rounded-full hover:shadow hover:shadow-purple-600 hover:scale-105 transition-transform duration-200 overflow-hidden flex-shrink-0">{file.name}</button>
                                 )
                             )
                         )
