@@ -299,7 +299,7 @@ export default function Chat() {
                 minRows={1}
                 onKeyDown={handleKeyDown}
               />
-              <div className="flex ml-2 justify-end mb-1"><button onClick={sendPrompt} disabled={prompt.length === 0} className="disabled:shadow-none disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 hover:border-b border-purple-300  h-10 text-white font-mono bg-purple-500 shadow-md hover:shadow-purple-600 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200"></button></div>
+              <div className="flex ml-2 justify-end mb-1"><button onClick={sendPrompt} disabled={prompt.length === 0} className="disabled:shadow-none disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 hover:border-b border-purple-300  h-10 text-white font-mono bg-purple-500 shadow-md hover:shadow-purple-600 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Send</button></div>
               <div className="flex ml-2 justify-end mb-1"><button onClick={clearLocalForage} disabled={Number(localStorageSize) === 0} className="disabled:shadow-none disabled:border-none disabled:hover:scale-100 disabled:text-gray-300 disabled:cursor-not-allowed disabled:opacity-50 hover:border-b border-purple-300 h-10 text-white font-mono bg-purple-500 shadow-md hover:shadow-purple-600 rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">Clear</button></div>
               {
                 prompting ? (
@@ -310,7 +310,7 @@ export default function Chat() {
               }
             </div>
         </div>
-        <div className="hidden overflow-hidden flex-shrink-1 absolute right-4 mb-32 bottom-0 xl:flex flex-col items-center justify-start w-[13%] h-[78%] bg-gray-600 rounded-xl">
+        <div className="hidden overflow-hidden flex-shrink-1 absolute right-4 mb-32 bottom-0 xl:flex flex-col items-center justify-start w-[13%] h-[78%] bg-gray-transparent rounded-xl border-b-white border-b border-t border-r border-l shadow-fuchsia-600 shadow-xl">
            {
             showInstructions  ? (
               <InstructionFileList onClose={() => {setShowInstructions(false)}} />
@@ -325,8 +325,7 @@ export default function Chat() {
               <button className="flex flex-col gap-y-2  items-center justify-center w-[80%] h-[8%] bg-gray-800 font-bold text-sm xl:text-md p-10 overflow-y-hidden xl:p-2 rounded-xl hover:scale-110 transition-transform duration-200 text-white font-mono" onClick={() => {setShowFineTuning(true)}}>Fine-Tuning</button>
             )
            }
-           
         </div>
-        </div>
+      </div>
     )
 }

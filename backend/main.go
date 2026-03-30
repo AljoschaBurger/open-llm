@@ -65,8 +65,9 @@ func main() {
 
 	// get all instructions for the instruction list
 	handleGetAllInstructions := handlers.HandleGetAllInstructionFiles
+	getAllInstructionsrepo := &handlers.GetAllInstructionsSQL{DB: db}
 	mux.HandleFunc("/instructions/all", func(w http.ResponseWriter, r *http.Request) {
-		handleGetAllInstructions(db, w, r)
+		handleGetAllInstructions(getAllInstructionsrepo, w, r)
 	})
 
 	// delete a specific instruction

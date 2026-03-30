@@ -7,17 +7,34 @@ import (
 	"net/http"
 )
 
+type GetAllInstructionsStore interface {
+	GetRows() (*sql.Rows, error)
+}
+
 type instruction struct {
 	Name        string `json:"name"`
 	Instruction string `json:"instruction"`
 }
 
-func HandleGetAllInstructionFiles(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+type GetAllInstructionsSQL struct {
+	DB *sql.DB
+}
+
+func (g *GetAllInstructionsSQL) GetRows() (*sql.Rows, error) {
+	rows, err := g.DB.Query("SELECT name, instruction FROM instruction")
+	if err != nil {
+		return nil, err
+	} else {
+		return rows, err
+	}
+}
+
+func HandleGetAllInstructionFiles(g GetAllInstructionsStore, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	instructions := []instruction{}
 
-	rows, err := db.Query("select name, instruction from instruction")
+	rows, err := g.GetRows()
 	if err != nil {
 		log.Printf("DB Query Error: %v", err)
 		http.Error(w, "Database Error", http.StatusInternalServerError)
