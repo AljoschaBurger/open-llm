@@ -35,10 +35,10 @@ export default function FineTuning({onClose}: FineTuningProps) {
 
 
     return(
-        <div className="bg-gray-800 rounded-lg p-2 h-[55%] w-[90%] flex-shrink-1">
+        <div className="bg-gray-800 rounded-lg p-2 h-[50%] w-[90%] flex-shrink-1 relative">
             <button 
                     onClick={onClose} 
-                    className="flex justify-center items-center text-2xl rounded-xl text-red-400 absolute top-30 right-6 hover:scale-150 transition-transform duration-100"
+                    className="flex justify-center items-center text-2xl rounded-xl text-red-400 absolute top-0 right-1 hover:scale-150 transition-transform duration-100"
             >
                     x
             </button>
@@ -104,7 +104,7 @@ export default function FineTuning({onClose}: FineTuningProps) {
                         className="p-2 rounded-md mt-1 accent-purple-500 hover:accent-purple-600" 
                     />
                     <datalist id="num-predict-markers" className="flex text-white justify-between w-full px-1 font-mono relative">
-                        <option value="1" label="1"></option>
+                        <option value="0" label="1"></option>
                         <option value="2048" label="2048" className="ml-7"></option>
                         <option value="4096" label="4096"></option>
                     </datalist>

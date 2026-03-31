@@ -48,7 +48,7 @@ export default function PromptRequest ({
         <textarea
                 ref={ref}
                 rows={minRows}
-                className={["w-[80%] text-black resize-none rounded-2xl border border-gray-300 bg-white px-4 py-3 text-lg leading-6 focus:outline-none focus:ring-2 focus:ring-fuchsia-500", isScrollable ? "overflow-y-auto" : "overflow-y-hidden", className].join(" ")}
+                className={["w-[80%] text-black resize-none rounded-2xl border border-gray-300 bg-white px-4 py-3 text-lg leading-6 focus:ring-2 focus:ring-fuchsia-400 focus:outline-none focus:shadow-lg focus:shadow-fuchsia-600", isScrollable ? "overflow-y-auto" : "overflow-y-hidden", className].join(" ")}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 onInput={resize}

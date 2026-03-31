@@ -6,6 +6,8 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import InstructionFileList from "./InstructionFileList";
+import RamUsage from "./RamUsage";
+import ErrorModal from "./modals/ErrorModal";
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import ChatList from "./ChatList";
@@ -103,7 +105,8 @@ export default function Chat() {
 
         setPrompting(true);
 
-        const response = await fetch("http://localhost:8080/ask", {
+        try {
+          const response = await fetch("http://localhost:8080/ask", {
           method: "POST",
           signal: controller.signal,
           headers: { "Content-Type": "application/json" },
@@ -187,6 +190,9 @@ export default function Chat() {
         isFinished = true;
         setPrompting(false);
         clearInterval(timeoutWatcher);
+        }
+        } catch (error) {
+          setErrorMessage("Error while trying to interact with the local llm");
         }
     };
 
@@ -275,8 +281,20 @@ export default function Chat() {
     const [showInstructions, setShowInstructions] = useState(false);
     const [showFineTuning, setShowFineTuning] = useState(false);
 
+    const [errorMessage, setErrorMessage] = useState("");
+    const handleCloseError = () => {
+        setErrorMessage("");
+    }
+
     return (
         <div className="flex flex-row w-full bg-gray-900 justify-center relative">
+        <RamUsage />
+        <ErrorModal 
+                        isOpen={errorMessage !== ""} 
+                        onClose={handleCloseError} 
+                        message={errorMessage}
+                        isDelete={true} 
+                    />
           
           <div className="flex ml-20 items-center justify-between h-screen flex-col w-[90%]">
             <Header /> 
@@ -310,7 +328,7 @@ export default function Chat() {
               }
             </div>
         </div>
-        <div className="hidden overflow-hidden flex-shrink-1 absolute right-4 mb-32 bottom-0 xl:flex flex-col items-center justify-start w-[13%] h-[78%] bg-gray-transparent rounded-xl border-b-white border-b border-t border-r border-l shadow-fuchsia-600 shadow-xl">
+        <div className="hidden overflow-hidden flex-shrink-1 absolute right-4 mb-32 bottom-0 xl:flex flex-col items-center justify-start w-[13%] h-[78%] bg-gray-transparent rounded-xl border-b-white border-b border-t border-r border-l shadow-fuchsia-600 shadow-md">
            {
             showInstructions  ? (
               <InstructionFileList onClose={() => {setShowInstructions(false)}} />

@@ -39,5 +39,4 @@ A free to use and containerized generative AI web application to use ollama llam
 ### Todos
 1. store the instruction into the llm call
 2. In Syntaxhighlighter compontent a possiblity to copy code etc.
-3. Button to stop the llm from answering
-4. The FineTuning should not work with individual input but with pre added buttons
+3. Show the Token / Seconds duration

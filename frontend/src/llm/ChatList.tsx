@@ -7,7 +7,7 @@ import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const ChatList = React.memo(({ history, messagesEndRef, handleScroll }: any) => {
   return (
-    <div ref={messagesEndRef} onScroll={handleScroll} className="flex mt-5 flex-col flex-1 overflow-y-auto w-[70%] p-3 space-y-4 bg-gray-600 rounded-xl">
+    <div ref={messagesEndRef} onScroll={handleScroll} className="flex mt-5 flex-col flex-1 overflow-y-auto w-[70%] p-3 space-y-4 bg-gray-transparent rounded-xl border-white border shadow-md shadow-fuchsia-500">
       {history.map((item: any) => (
         <MessageItem key={item.id} item={item} />
       ))}
@@ -18,7 +18,7 @@ const ChatList = React.memo(({ history, messagesEndRef, handleScroll }: any) => 
 // Auch die einzelnen Items memoisieren!
 const MessageItem = React.memo(({ item }: any) => {
   return (
-    <div className={`p-3 rounded-lg w-[80%]  ${item.type === "prompt" ? "bg-blue-500 text-white self-end" : "bg-gray-200 text-gray-800 self-start"}`}>
+    <div className={`p-3 rounded-lg w-[80%]  ${item.type === "prompt" ? "bg-purple-500 text-white self-end" : "bg-gray-200 text-gray-800 self-start"}`}>
       <div className="font-extrabold text-sm mb-1">
         {item.type === "prompt" ? "You" : "Open-llm"}
       </div>

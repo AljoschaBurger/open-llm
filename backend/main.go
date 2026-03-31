@@ -87,6 +87,8 @@ func main() {
 		handleUpdateInstruction(w, r, db)
 	})
 
+	mux.HandleFunc("/ram", handlers.HandleRamUsage)
+
 	log.Println("Backend running on Port :8080")
 	log.Fatal(http.ListenAndServe("0.0.0.0:8080", handler))
 }

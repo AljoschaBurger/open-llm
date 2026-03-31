@@ -77,10 +77,10 @@ export default function InstructionFileList({ onClose }: InstructionFileListProp
             <ModalEdit isOpen={isEditModalOpen} onClose={handleCloseEditModal} title={"Are you sure your whant to delete the instruction: '" + localStorage.getItem("activeInstruction") + "'"} trigger={trigger} setTrigger={setTrigger} instructionName={activeInstruction}/>
 
             
-            <div className="flex overflow-hidden justify-between flex-shrink-0 flex-col gap-y-4 h-full w-full bg-gray-800 p-2 rounded-xl relative">
+            <div className="flex overflow-hidden justify-between flex-shrink-0 flex-col gap-y-4 h-full w-full bg-gray-800 p-2 rounded-xl">
                 <button 
                     onClick={onClose} 
-                    className="flex justify-center items-center text-2xl rounded-xl text-red-400 absolute top-1 right-2 hover:scale-150 transition-transform duration-100"
+                    className="flex justify-center items-center text-2xl rounded-xl text-red-400 absolute top-0 right-1 hover:scale-150 transition-transform duration-100"
                 >
                     x
                 </button>
