@@ -80,7 +80,7 @@ export default function InstructionFileList({ onClose }: InstructionFileListProp
             <div className="flex overflow-hidden justify-between flex-shrink-0 flex-col gap-y-4 h-full w-full bg-gray-800 p-2 rounded-xl">
                 <button 
                     onClick={onClose} 
-                    className="flex justify-center items-center text-2xl rounded-xl text-red-400 absolute top-0 right-1 hover:scale-150 transition-transform duration-100"
+                    className="flex justify-center items-center text-2xl rounded-xl text-red-400 absolute top-7 right-4 hover:scale-150 transition-transform duration-100"
                 >
                     x
                 </button>
