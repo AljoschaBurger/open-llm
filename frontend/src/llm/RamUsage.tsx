@@ -36,7 +36,7 @@ const RamUsage: React.FC = () => {
     };
 
     return (
-        <div className="fixed  top-24 left-20 z-50 p-4 bg-gray-800 rounded-xl border border-purple-500 shadow-lg shadow-purple-800/20 font-mono text-xs text-white flex flex-col gap-2">
+        <div className="fixed  top-24 left-20 z-50 p-4 bg-gray-800 rounded-xl border border-purple-500 shadow-lg shadow-purple-900/20 font-mono text-xs text-white flex flex-col gap-2">
             <div className="flex justify-between items-center gap-4">
                 <span className="font-bold text-purple-400">RAM Usage</span>
                 <span className={ramInfo.usedPercent > 80 ? 'text-red-400' : 'text-green-400'}>
