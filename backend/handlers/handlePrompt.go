@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/AljoschaBurger/open-llm/mcp"
 	"github.com/AljoschaBurger/open-llm/ollama"
 )
 
@@ -82,6 +83,30 @@ func HandlePrompt(
 		Content: req.Prompt,
 	})
 
+	// defining the tools for the llm to chose from
+	myTools := ollama.Tool{
+		Type: "function",
+		Function: struct {
+			Name        string `json:"name"`
+			Description string `json:"description"`
+			Parameters  any    `json:"parameters"`
+		}{
+			Name:        "get_current_time",
+			Description: "Only call this tool when the user explicitly asks for the current time or date. Do NOT use it for general questions.",
+			Parameters: map[string]interface{}{
+				// should return one JSON object
+				"type": "object",
+				"properties": map[string]interface{}{
+					"city": map[string]string{
+						"type":        "string",
+						"description": "The name of the city",
+					},
+				},
+				"required": []string{"city"},
+			},
+		},
+	}
+
 	ollamaReq := ollama.OllamaChatRequest{
 		Model:    usedModel,
 		Messages: messages,
@@ -93,6 +118,11 @@ func HandlePrompt(
 		},
 	}
 
+	if req.ToolUsage {
+		// only if the request includes tool_usage = true
+		ollamaReq.Tools = []ollama.Tool{myTools}
+	}
+
 	// transforms the request-struct into json bytes to be handled by io.Reader
 	body, _ := json.Marshal(ollamaReq)
 
@@ -100,7 +130,7 @@ func HandlePrompt(
 
 	// builds a http-request out of the json serialized struct
 	ollamaHTTPReq, err := http.NewRequestWithContext(
-		ctx,
+		r.Context(),
 		"POST",                // Method
 		ollamaBaseURL,         // container url from the llm
 		bytes.NewBuffer(body), // the actual json body with the information from the user request as bytes
@@ -126,6 +156,7 @@ func HandlePrompt(
 	defer resp.Body.Close() // reponse-socket needs to be closed to release the information
 
 	// TODO: Tool check + Tool call
+	// chek if there is a tool set
 
 	w.Header().Set("Content-Type", "application/x-ndjson")
 	//w.Header().Set("Transfer-Encoding", "chunked") // chunked is importend to send the splitted information to the frontend (streamed)
@@ -141,9 +172,111 @@ func HandlePrompt(
 	buf := make([]byte, maxCapacity)
 	scanner.Buffer(buf, maxCapacity)
 
+	isToolCall := false
+	var collectedToolCalls []ollama.ToolCall // stores the executed tools
+	var assistantText string                 // stores the text which may be generated before the tool call
+
 	for scanner.Scan() {
-		line := scanner.Text()       // every line is a chunk send by ollama
-		w.Write([]byte(line + "\n")) // immediately sends the current line to the frontend
-		flusher.Flush()              // enables the immediate sending through streaming
+		line := scanner.Text() // every line is a chunk send by ollama
+		var chunk ollama.ChatResponseChunk
+		err := json.Unmarshal([]byte(line), &chunk) // parsing each line of output into a chunk object
+		if err != nil {
+			continue
+		}
+
+		if len(chunk.Message.ToolCalls) > 0 {
+
+			fmt.Printf("LOG: Tool Call 1" + chunk.Message.ToolCalls[0].Function.Name)
+			fmt.Printf("LOG: Tool Call Länge %d", len(chunk.Message.ToolCalls))
+
+			isToolCall = true
+			// storing the tool call instead of sending it via stream to the frontend
+			collectedToolCalls = chunk.Message.ToolCalls
+			continue
+		}
+		if !isToolCall {
+			w.Write([]byte(line + "\n"))
+			flusher.Flush()
+			assistantText += chunk.Message.Content
+		}
 	}
+
+	if isToolCall {
+		sendIntermediateMessage(w, flusher, "🛠️ Using MCP-Tooling...")
+
+		messages = append(messages, ollama.ChatMessage{
+			Role:      "assistant",
+			Content:   assistantText,
+			ToolCalls: collectedToolCalls,
+		})
+
+		// TODO: maybe build this into a seperated function/ file to be more modular
+		for _, toolCall := range collectedToolCalls {
+			var toolResult string
+			fmt.Printf("LOG: LLM versucht Tool aufzurufen: '%s'\n", toolCall.Function.Name)
+			fmt.Printf("LOG: Mit diesen Argumenten: %+v\n", toolCall.Function.Args)
+
+			if toolCall.Function.Name == "get_current_time" {
+				args := toolCall.Function.Args
+				cityInterface, exists := args["city"]
+
+				if !exists {
+					toolResult = "Error: The parameter 'city' is invalid"
+				} else {
+					cityStr, ok := cityInterface.(string)
+					if !ok {
+						toolResult = "Error: The parameter 'city' is invalid."
+					} else {
+						timeString := mcp.GetCurrentTime(cityStr)
+						toolResult = fmt.Sprintf(`{"success": true, "result": "%s"}`, timeString)
+					}
+				}
+			} else {
+				toolResult = "Error: Tool not found"
+			}
+
+			fmt.Printf("LOG: Backend schickt dieses Ergebnis ans LLM: %s\n", toolResult)
+
+			messages = append(messages, ollama.ChatMessage{
+				Role:    "tool",
+				Content: toolResult,
+			})
+		}
+
+		// final call without tooling
+		ollamaReq.Messages = messages
+		ollamaReq.Tools = nil
+
+		body, _ = json.Marshal(ollamaReq)
+		httpReq2, _ := http.NewRequestWithContext(
+			ctx,
+			"POST",
+			ollamaBaseURL,
+			bytes.NewBuffer(body),
+		)
+
+		httpReq2.Header.Set("Content-Type", "application/json")
+		resp2, err := OllamaHTTPClient.Do(httpReq2)
+		if err != nil {
+			return
+		}
+
+		defer resp2.Body.Close()
+
+		scanner2 := bufio.NewScanner(resp2.Body)
+		scanner2.Buffer(make([]byte, 512*1024), 512*1024)
+
+		for scanner2.Scan() {
+			line := scanner2.Text()
+			w.Write([]byte(line + "\n"))
+			flusher.Flush()
+		}
+	}
+}
+
+func sendIntermediateMessage(w http.ResponseWriter, flusher http.Flusher, msg string) {
+	// Message for the frontend to inform the user about the tool usage
+	fakeChunk := fmt.Sprintf(`{"model":"%s","message":{"role":"assistant","content":"\n_%s_\n\n"},"done":false}`, usedModel, msg)
+	w.Write([]byte(fakeChunk + "\n"))
+	flusher.Flush()
 }
