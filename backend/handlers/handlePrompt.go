@@ -44,11 +44,19 @@ func HandlePrompt(
 		return
 	}
 
+	var systemPrompt string
+
 	// Parse the JSON-encoded prompt from the request body into the ollama.PromptRequest struct.
 	var req ollama.PromptRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
+	}
+
+	if req.ToolUsage {
+		systemPrompt = ollama.BasicInstruction
+	} else {
+		systemPrompt = "You currently have NO access to external tools, the internet, or live data. Answer everything based on your own knowledge."
 	}
 
 	var messages []ollama.ChatMessage
@@ -73,9 +81,15 @@ func HandlePrompt(
 		} else {
 			messages = append(messages, ollama.ChatMessage{
 				Role:    "system",
-				Content: instruction,
+				Content: instruction + "\n\n" + systemPrompt,
 			})
 		}
+	} else {
+		messages = append(messages, ollama.ChatMessage{
+			Role: "system",
+			// WICHTIG: Hier die Basis-Anleitung mit Zeilenumbruch anhängen!
+			Content: systemPrompt,
+		})
 	}
 
 	messages = append(messages, ollama.ChatMessage{
@@ -92,7 +106,7 @@ func HandlePrompt(
 			Parameters  any    `json:"parameters"`
 		}{
 			Name:        "get_current_time",
-			Description: "Only call this tool when the user explicitly asks for the current time or date. Do NOT use it for general questions.",
+			Description: "Only use this tool if the user asks for the current time.A tool to get the current time in a given city.",
 			Parameters: map[string]interface{}{
 				// should return one JSON object
 				"type": "object",

@@ -77,6 +77,7 @@ export default function Chat() {
           temperature: number;
           top_p: number;
           num_predict: number;
+          tool_usage?: boolean;
         }
 
         const responseId = addResponseToHistory();
@@ -95,6 +96,12 @@ export default function Chat() {
         };
 
         const instruction = localStorage.getItem("activeInstruction");
+
+        let useTool = localStorage.getItem("useTool");
+
+        if (useTool === 'true') {
+          payload.tool_usage = true;
+        }
 
         if (instruction && instruction.trim() !== "") {
             payload.instruction = instruction;
