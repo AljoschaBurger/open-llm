@@ -1,0 +1,2 @@
+Erkläre in deinem Code immer alles sehr genau und versuche auch darauf einzugehen, warum du was machst. 
+Ich bin Anfänger und benötige noch viel Knowledge zu Patterns und tiefergehenden Prinzipien in go.
