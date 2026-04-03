@@ -14,6 +14,7 @@ import ChatList from "./ChatList";
 // @ts-ignore
 import 'katex/dist/katex.min.css';
 import FineTuning from "./FineTuning";
+import ToolUsageToggle from "./ToolUsageToggle";
 
 export default function Chat() {
     type Prompt = {
@@ -329,6 +330,7 @@ export default function Chat() {
             </div>
         </div>
         <div className="hidden overflow-hidden flex-shrink-1 absolute right-4 mb-32 bottom-0 xl:flex flex-col items-center justify-start w-[13%] h-[78%] bg-gray-transparent rounded-xl border-b-white border-b border-t border-r border-l shadow-fuchsia-600 shadow-md">
+           <ToolUsageToggle />
            {
             showInstructions  ? (
               <InstructionFileList onClose={() => {setShowInstructions(false)}} />
@@ -343,6 +345,7 @@ export default function Chat() {
               <button className="flex flex-col gap-y-2  items-center justify-center w-[80%] h-[8%] bg-gray-800 font-bold text-sm xl:text-md p-10 overflow-y-hidden xl:p-2 rounded-xl hover:scale-110 transition-transform duration-200 text-white font-mono" onClick={() => {setShowFineTuning(true)}}>Fine-Tuning</button>
             )
            }
+           
         </div>
       </div>
     )

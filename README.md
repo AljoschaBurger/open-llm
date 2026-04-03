@@ -41,3 +41,4 @@ A free to use and containerized generative AI web application to use ollama llam
 2. In Syntaxhighlighter compontent a possiblity to copy code etc.
 3. Show the Token / Seconds duration
 4. Shows the Time needed to generate the anwser
+5. Linter for reactTS

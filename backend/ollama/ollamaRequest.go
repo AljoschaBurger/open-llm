@@ -1,24 +1,27 @@
 package ollama
 
 type PromptRequest struct {
-	Instruction   string  `json:"instruction"` // optional
+	Instruction   string  `json:"instruction"`
 	CurrentChatId int     `json:"currentChatId"`
 	Prompt        string  `json:"prompt"`
 	Temperature   float64 `json:"temperature"`
 	TopP          float64 `json:"top_p"`
 	NumPredict    int     `json:"num_predict"`
+	ToolUsage     bool    `json:"tool_usage"`
 }
 
 type OllamaChatRequest struct {
 	Model    string        `json:"model"`
 	Messages []ChatMessage `json:"messages"`
 	Stream   bool          `json:"stream"`
+	Tools    []Tool        `json:"tools"`
 	Options  Options       `json:"options"`
 }
 
 type ChatMessage struct {
-	Role    string `json:"role"` // "system", "user" oder "assistant"
-	Content string `json:"content"`
+	Role      string     `json:"role"` // "system", "user" oder "assistant"
+	Content   string     `json:"content"`
+	ToolCalls []ToolCall `json:"tool_calls"`
 }
 
 type OllamaChatResponse struct {
@@ -39,6 +42,19 @@ type Tool struct {
 		Description string `json:"description"`
 		Parameters  any    `json:"parameters"`
 	} `json:"function"`
+}
+
+type ToolCall struct {
+	Function struct {
+		Name string                 `json:"name"`
+		Args map[string]interface{} `json:"arguments"`
+	} `json:"function"`
+}
+
+type ChatResponseChunk struct {
+	Model   string      `json:"model"`
+	Message ChatMessage `json:"message"`
+	Done    bool        `json:"done"`
 }
 
 func FallbackFloat(val float64, def float64) float64 {
