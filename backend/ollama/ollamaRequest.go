@@ -32,6 +32,15 @@ type Options struct {
 	TopP        float64 `json:"top_p,omitempty"`       // quality filter - 0.1 = only top values (facts) - 0.5 = mixed - 1 = everything is allowed
 }
 
+type Tool struct {
+	Type     string `json:"type"`
+	Function struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Parameters  any    `json:"parameters"`
+	} `json:"function"`
+}
+
 func FallbackFloat(val float64, def float64) float64 {
 	if val <= 0 {
 		return def

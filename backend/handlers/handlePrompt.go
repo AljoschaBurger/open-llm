@@ -125,6 +125,8 @@ func HandlePrompt(
 
 	defer resp.Body.Close() // reponse-socket needs to be closed to release the information
 
+	// TODO: Tool check + Tool call
+
 	w.Header().Set("Content-Type", "application/x-ndjson")
 	//w.Header().Set("Transfer-Encoding", "chunked") // chunked is importend to send the splitted information to the frontend (streamed)
 
