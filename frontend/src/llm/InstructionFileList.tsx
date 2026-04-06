@@ -82,10 +82,10 @@ export default function InstructionFileList({ onClose }: InstructionFileListProp
                     x
                 </button>
             
-            <div className="flex overflow-hidden justify-between flex-shrink-0 flex-col gap-y-4 h-full w-full bg-gray-800 p-2 rounded-xl">
+            <div className="flex overflow-hidden justify-between flex-shrink-0 flex-col gap-y-4 h-full w-full bg-gray-800 p-5 rounded-xl">
                 
                 
-                <div className="flex gap-y-3 p-4 flex-col items-center overflow-y-scroll max-h-[calc(100%-40px)] font-mono">
+                <div className="flex gap-y-3 p-1 flex-col items-center overflow-y-scroll max-h-[calc(100%-40px)] font-mono">
                     {
                         instructionFiles.length !== 0 ? (
                             instructionFiles.map((file, index) => (

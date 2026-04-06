@@ -317,7 +317,7 @@ export default function Chat() {
                 <div className="flex justify-center bg-gray-300 p-4 text-xl rounded-lg shadow-fuchsia-600 shadow-lg border-b-2 border-purple-100 animate-bounce font-mono">Try your local Open-llm instace with a prompt!</div>
               )
             }            
-            <div className="flex flex-row mt-10 mb-10 items-center justify-center w-[40%] gap-x-2">
+            <div className="flex flex-row mt-10 mb-10 items-center justify-center w-[40%] gap-x-2 relative">
               <PromptRequest  
                 value={prompt}
                 onChange={setPrompt}
@@ -331,7 +331,7 @@ export default function Chat() {
                 prompting ? (
                   <div className="flex ml-2 justify-end mb-1"><button onClick={handleStopClick} className="h-10 w-10 animate-pulse text-white font-mono bg-red-500 shadow-md rounded-2xl p-2 mt-2 hover:scale-110 transition-transform duration-200">&#9633;</button></div>
                 ) : (
-                  <div className="flex ml-2 justify-end mb-1"></div>
+                  <div className="flex ml-2 justify-end mb-1 w-10"></div>
                 )
               }
             </div>
