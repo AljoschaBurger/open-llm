@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/shirou/gopsutil/v3/mem"
@@ -15,9 +16,11 @@ type RamInfo struct {
 }
 
 func HandleRamUsage(w http.ResponseWriter, r *http.Request) {
-	v, err := mem.VirtualMemory()
+	// VirtualMemory returns statistics about physical memory usage.
+	v, err := mem.VirtualMemoryWithContext(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("Error fetching RAM info: %v", err)
+		http.Error(w, "Could not retrieve RAM information", http.StatusInternalServerError)
 		return
 	}
 

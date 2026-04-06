@@ -45,6 +45,14 @@ func (s *SQLCreateInstructionStore) Save(name, instruction string) error {
 	return err
 }
 
+func (s *SQLCreateInstructionStore) CreateTableIfNotExist() error {
+	_, err := s.DB.Exec("CREATE TABLE IF NOT EXISTS instruction (name varchar(255) NOT NULL PRIMARY KEY, instruction TEXT NOT NULL)")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func HandleCreateInstruction(
 	store CreateInstructionStore,
 	w http.ResponseWriter,

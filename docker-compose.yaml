@@ -18,10 +18,20 @@ services:
       retries: 20
   llm:
     image: ollama/ollama:latest
+    container_name: llm
+    environment:
+      - OLLAMA_MODEL=${OLLAMA_MODEL}
     ports:
       - "11435:11434"
     volumes:
       - llm-data:/root/.ollama
+    entrypoint: /bin/sh
+    command: -c "ollama serve & sleep 10 && echo '--- STARTING MODEL PULL (${OLLAMA_MODEL}) ---' && ollama pull ${OLLAMA_MODEL} && echo '--- MODEL READY ---' && wait"
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list | grep -q '${OLLAMA_MODEL}'"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
 
   backend:
       build:
@@ -30,14 +40,14 @@ services:
       # USER : PASSWORD @ PROTOCOL(HOST:PORT) / DATABASE ? OPTIONS
         MYSQL_DSN: "user:user123@tcp(mysql:3306)/llm-db?parseTime=true"
         OLLAMA_BASE_URL: "http://llm:11434"
-        OLLAMA_MODEL: "llama3.1:8b-instruct-q4_1"
+        OLLAMA_MODEL: "${OLLAMA_MODEL}"
       ports:
         - "8080:8080"
       depends_on:
         mysql:
           condition: service_healthy
         llm:
-          condition: service_started
+          condition: service_healthy
     
   frontend:
     build:

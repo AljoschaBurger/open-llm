@@ -41,6 +41,15 @@ func main() {
 		return
 	}
 
+	// Centralized Table Initialization
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS instruction (
+		name varchar(255) NOT NULL PRIMARY KEY, 
+		instruction TEXT NOT NULL
+	)`)
+	if err != nil {
+		log.Fatalf("Could not initialize database tables: %v", err)
+	}
+
 	log.Println("Successfully connected to database")
 
 	// test connection with "ping"

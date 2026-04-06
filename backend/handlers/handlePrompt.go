@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/AljoschaBurger/open-llm/mcp"
 	"github.com/AljoschaBurger/open-llm/ollama"
@@ -15,11 +16,22 @@ import (
 
 var OllamaHTTPClient = &http.Client{}
 
-// Ollama and docker information
-var usedModel = "llama3.1:8b-instruct-q4_1"                                  // the specific llm model
-var usedContainer = "llm"                                                    // the container name from the llm defined in the docker-compose.yaml file
-var usedPort = "11434"                                                       // the port where the llm is running
-var ollamaBaseURL = "http://" + usedContainer + ":" + usedPort + "/api/chat" // full URL with endpoint
+// getEnv returns the value of an environment variable or a fallback string.
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
+func getOllamaConfig() (string, string) {
+	model := getEnv("OLLAMA_MODEL", "llama3.1:8b-instruct-q4_1")
+	baseURL := getEnv("OLLAMA_BASE_URL", "http://llm:11434")
+	return model, baseURL + "/api/chat"
+}
+
+var usedModel, ollamaBaseURL = getOllamaConfig()
+var usedModelNameOnly = getEnv("OLLAMA_MODEL", "llama3.1:8b-instruct-q4_1")
 
 func checkForTable(db *sql.DB, dbName string, tableName string) (bool, error) {
 	query := `select count(*) from information_schema.TABLES where TABLE_SCHEMA = ? AND TABLE_NAME = ?`
@@ -43,6 +55,11 @@ func HandlePrompt(
 		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	// Refresh config from env in case they changed (or move to a config struct)
+	currentModel, currentURL := getOllamaConfig()
+	usedModel = currentModel
+	ollamaBaseURL = currentURL
 
 	var systemPrompt string
 
