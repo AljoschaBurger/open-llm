@@ -28,7 +28,7 @@ export default function ToolUsageToggle() {
 
     return (
 
-        <div className="flex justify-between items-center w-[80%] bg-gray-800 rounded-lg mt-2 p-3">
+        <div className="flex justify-center items-center w-[80%] bg-gray-800 rounded-lg mt-2 p-3">
 
             <span className="text-white font-mono">Tool Usage</span><Switch {...label} onChange={() => setUseTools(!useTool)} />
 
